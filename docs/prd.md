@@ -62,9 +62,12 @@ Based on the provided competition schedule (WhatsApp Image 2025-12-18 at 6.22.28
 ### 5.1 Public User (Participant) Features
 \n#### 5.1.1 Home Page
 - Access to Registration portal
-- View'Hall of Fame' (Winners list)
-- Display event poster images: image.png, screenshot.png, WhatsApp Image 2025-12-18 at 6.22.28 PM.jpeg
-\n#### 5.1.2 Multi-Step Registration Process
+- View'Hall of Fame' (Winners list) displaying results in the format:
+  - Age Category
+  - Competition Name
+  - Winners (Rank 1, 2, 3)\n- Display event poster images: image.png, screenshot.png, WhatsApp Image 2025-12-18 at 6.22.28 PM.jpeg
+
+#### 5.1.2 Multi-Step Registration Process
 **Step 1 - Profile Information**:\n- Input: Name, Date of Birth\n- Auto-calculation: Age and AgeGroup assignment based on the following rules:
   - Krishna Kids: 0-5 years
   - Krishna Juniors: 6-9 years
@@ -160,17 +163,25 @@ Controls the 'Front-Door' and financial aspects of the app:
 - Select participant from list
 - Input marks based on event-specific rubrics
 - Matrix view for score consolidation across judges
-- Select and publish Rank1,2, 3 winners
+
+**Winner Selection Workflow**:
+1. **Score Validation Check**: Before allowing winner selection, the system must verify that all assigned judges have submitted scores for all participants in the competition
+2. **Automatic Winner Calculation**: Once all judges have scored, the system automatically calculates and suggests Rank 1, 2, and 3 winners based on aggregated scores
+3. **Manual Winner Override**: Judges retain the ability to manually edit and adjust the winner rankings even after the system has calculated the results
+4. **Publish to Host**: After finalizing the winners, judges can publish the results, which are then transmitted to the Host Portal for announcement
 
 ### 5.4 Host Portal Features
 
 #### 5.4.1 Stage Management
 - View participant queue for selected events
 - Display scheduled timings for each competition
-- Call participants to stage
-\n#### 5.4.2 Winner Announcement
+- Call participants to stage\n\n#### 5.4.2 Winner Announcement
 - 'Divine Ranks' celebration screen
-- Display published results
+- Display published results received from Judge Portal
+- Results are organized in the following format:
+  - **Age Category** (Krishna Kids / Krishna Juniors / Krishna Teens)
+  - **Competition Name**
+  - **Winners** (Rank 1, Rank 2, Rank 3with participant names)
 \n## 6. Business Logic
 
 ### 6.1 Age Calculation\n- Automatic calculation based on birth date and current date
@@ -182,21 +193,27 @@ Controls the 'Front-Door' and financial aspects of the app:
 - Fixed fee: Rs.100 per competition
 - Total fee = Number of competitions × Rs.100
 \n### 6.3 Result Publishing
-- Results visible to Host and Public only after Judge publishes\n- Explicit publish action required
+**Updated Result Publishing Workflow**:
+1. **Judge Scoring Phase**: All assigned judges must submit scores for all participants in a competition
+2. **Score Validation**: System checks if all judges have completed scoring before enabling winner selection
+3. **Winner Determination**: System automatically calculates winners based on aggregated scores, but judges can manually override the rankings
+4. **Judge Publication**: Judges publish the finalized winner list\n5. **Host Reception**: Published results are transmitted to the Host Portal\n6. **Public Display**: Host publishes results to the main page (Hall of Fame) in the format:
+   - Age Category
+   - Competition Name
+   - Winners (Rank 1, 2, 3)
+7. **Visibility Rule**: Results are visible to Host and Public only after Judge publishes and Host approves for public display
 
 ### 6.4 Print Optimization
 - @media print queries for receipt formatting
 - Single-page layout with UI clutter removal
 \n## 7. Additional Requirements
 
-### 7.1 Metadata
-- App title: 'Sri Krishna Janmashtami Competitions'\n- Camera permissions in metadata.json for future QR scanning
+### 7.1 Metadata\n- App title: 'Sri Krishna Janmashtami Competitions'\n- Camera permissions in metadata.json for future QR scanning
 \n### 7.2 Accessibility
 - Mobile-first responsive design
 - High contrast text (black on light backgrounds)
 - Clear navigation for all user roles
-
-### 7.3 Reference Images
+\n### 7.3 Reference Images
 - Use image.png as event branding element
 - Use screenshot.png for UI reference
 - Use WhatsApp Image 2025-12-18 at 6.22.28 PM.jpeg as the official competition schedule poster displaying age groups, competitions, timings, and registration details throughout the website

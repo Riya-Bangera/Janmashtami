@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole } from '@/types/types';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +31,22 @@ export default function JudgeDashboard() {
     }
   }, [currentUser, navigate]);
 
+  // Load existing winners when competition changes
+  useEffect(() => {
+    if (selectedCompetition) {
+      const existingResult = getResultByCompetition(selectedCompetition);
+      if (existingResult) {
+        setSelectedRanks({
+          rank1: existingResult.rank1,
+          rank2: existingResult.rank2,
+          rank3: existingResult.rank3
+        });
+      } else {
+        setSelectedRanks({ rank1: '', rank2: '', rank3: '' });
+      }
+    }
+  }, [selectedCompetition, getResultByCompetition]);
+
   if (!currentUser) return null;
 
   const assignedCompetitions = data.competitions.filter(comp =>
@@ -44,6 +62,47 @@ export default function JudgeDashboard() {
   const competitionScores = selectedCompetition
     ? data.scores.filter(s => s.competitionId === selectedCompetition)
     : [];
+
+  // Get all judges assigned to this competition
+  const getAssignedJudges = () => {
+    return data.users.filter(user => 
+      user.role === UserRole.Judge && 
+      user.assignedCompetitions?.includes(selectedCompetition)
+    );
+  };
+
+  // Check if all judges have scored all participants
+  const checkScoringComplete = () => {
+    if (!selectedCompetition || participants.length === 0) return { complete: false, message: '' };
+    
+    const assignedJudges = getAssignedJudges();
+    if (assignedJudges.length === 0) return { complete: false, message: 'No judges assigned to this competition' };
+
+    const missingScores: string[] = [];
+    
+    for (const judge of assignedJudges) {
+      for (const participant of participants) {
+        const hasScore = competitionScores.some(
+          s => s.judgeId === judge.id && s.registrationId === participant.registrationId
+        );
+        if (!hasScore) {
+          missingScores.push(`${judge.username} hasn't scored ${participant.name}`);
+        }
+      }
+    }
+
+    if (missingScores.length > 0) {
+      return {
+        complete: false,
+        message: `${missingScores.length} score(s) missing`,
+        details: missingScores
+      };
+    }
+
+    return { complete: true, message: 'All judges have scored all participants' };
+  };
+
+  const scoringStatus = checkScoringComplete();
 
   const handleLogout = () => {
     logout();
@@ -133,6 +192,15 @@ export default function JudgeDashboard() {
       return;
     }
 
+    if (!scoringStatus.complete) {
+      toast({
+        title: 'Error',
+        description: 'Cannot publish: All judges must score all participants first',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     const existingResult = getResultByCompetition(selectedCompetition);
 
     if (existingResult) {
@@ -156,7 +224,43 @@ export default function JudgeDashboard() {
 
     toast({
       title: 'Success',
-      description: 'Results published successfully'
+      description: 'Results published successfully! Winners are now visible to hosts and public.'
+    });
+
+    setResultsDialogOpen(false);
+  };
+
+  const handleSaveWinners = () => {
+    if (!selectedRanks.rank1 || !selectedRanks.rank2 || !selectedRanks.rank3) {
+      toast({
+        title: 'Error',
+        description: 'Please select all three ranks',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const existingResult = getResultByCompetition(selectedCompetition);
+
+    if (existingResult) {
+      updateResult(existingResult.id, {
+        rank1: selectedRanks.rank1,
+        rank2: selectedRanks.rank2,
+        rank3: selectedRanks.rank3
+      });
+    } else {
+      addResult({
+        competitionId: selectedCompetition,
+        rank1: selectedRanks.rank1,
+        rank2: selectedRanks.rank2,
+        rank3: selectedRanks.rank3,
+        published: false
+      });
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Winners saved successfully! You can edit them anytime before publishing.'
     });
 
     setResultsDialogOpen(false);
@@ -259,34 +363,135 @@ export default function JudgeDashboard() {
                     <CardTitle>Score Matrix & Results</CardTitle>
                     <Button onClick={() => setResultsDialogOpen(true)} className="rounded-[3rem]">
                       <i className="fas fa-trophy mr-2" />
-                      Publish Results
+                      {getResultByCompetition(selectedCompetition)?.published ? 'Edit Winners' : 'Select Winners'}
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Rank</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Average Score</TableHead>
-                          <TableHead>Judges Scored</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {rankedParticipants.map((participant, index) => (
-                          <TableRow key={participant.id}>
-                            <TableCell className="font-bold">#{index + 1}</TableCell>
-                            <TableCell className="font-semibold">{participant.name}</TableCell>
-                            <TableCell>{getAverageScore(participant.registrationId).toFixed(2)}</TableCell>
-                            <TableCell>
-                              {competitionScores.filter(s => s.registrationId === participant.registrationId).length}
-                            </TableCell>
+                <CardContent className="space-y-6">
+                  {/* Scoring Status Alert */}
+                  {scoringStatus.complete ? (
+                    <Alert className="border-green-500 bg-green-50">
+                      <i className="fas fa-check-circle text-green-600" />
+                      <AlertTitle className="text-green-800">Scoring Complete</AlertTitle>
+                      <AlertDescription className="text-green-700">
+                        {scoringStatus.message}. You can now select and publish winners.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <Alert className="border-orange-500 bg-orange-50">
+                      <i className="fas fa-exclamation-triangle text-orange-600" />
+                      <AlertTitle className="text-orange-800">Scoring Incomplete</AlertTitle>
+                      <AlertDescription className="text-orange-700">
+                        <p className="mb-2">{scoringStatus.message}</p>
+                        {scoringStatus.details && scoringStatus.details.length > 0 && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer font-semibold">View missing scores</summary>
+                            <ul className="mt-2 ml-4 list-disc text-sm">
+                              {scoringStatus.details.slice(0, 10).map((detail, idx) => (
+                                <li key={idx}>{detail}</li>
+                              ))}
+                              {scoringStatus.details.length > 10 && (
+                                <li>...and {scoringStatus.details.length - 10} more</li>
+                              )}
+                            </ul>
+                          </details>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Current Winners Display */}
+                  {getResultByCompetition(selectedCompetition) && (
+                    <Alert className="border-primary bg-primary/5">
+                      <i className="fas fa-trophy text-primary" />
+                      <AlertTitle>
+                        Current Winners 
+                        {getResultByCompetition(selectedCompetition)?.published && (
+                          <Badge className="ml-2 bg-green-600">Published</Badge>
+                        )}
+                        {!getResultByCompetition(selectedCompetition)?.published && (
+                          <Badge className="ml-2 bg-orange-600">Draft</Badge>
+                        )}
+                      </AlertTitle>
+                      <AlertDescription>
+                        <div className="mt-2 space-y-1">
+                          {(() => {
+                            const result = getResultByCompetition(selectedCompetition);
+                            const rank1Participant = participants.find(p => p.registrationId === result?.rank1);
+                            const rank2Participant = participants.find(p => p.registrationId === result?.rank2);
+                            const rank3Participant = participants.find(p => p.registrationId === result?.rank3);
+                            return (
+                              <>
+                                <p><strong>🥇 1st Place:</strong> {rank1Participant?.name || 'Unknown'}</p>
+                                <p><strong>🥈 2nd Place:</strong> {rank2Participant?.name || 'Unknown'}</p>
+                                <p><strong>🥉 3rd Place:</strong> {rank3Participant?.name || 'Unknown'}</p>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Judges Scoring Progress */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Judges Scoring Progress</h3>
+                    <div className="space-y-2">
+                      {getAssignedJudges().map(judge => {
+                        const judgeScores = competitionScores.filter(s => s.judgeId === judge.id);
+                        const scoredCount = new Set(judgeScores.map(s => s.registrationId)).size;
+                        const totalCount = participants.length;
+                        const percentage = totalCount > 0 ? (scoredCount / totalCount) * 100 : 0;
+                        
+                        return (
+                          <div key={judge.id} className="flex items-center gap-3">
+                            <div className="w-32 font-medium">{judge.username}</div>
+                            <div className="flex-1 bg-muted rounded-full h-6 overflow-hidden">
+                              <div 
+                                className={`h-full flex items-center justify-center text-xs font-bold transition-all ${
+                                  percentage === 100 ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'
+                                }`}
+                                style={{ width: `${percentage}%` }}
+                              >
+                                {percentage > 0 && `${scoredCount}/${totalCount}`}
+                              </div>
+                            </div>
+                            <div className="w-16 text-right text-sm font-semibold">
+                              {percentage.toFixed(0)}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Ranked Participants Table */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">Participants Ranking</h3>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Rank</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Average Score</TableHead>
+                            <TableHead>Judges Scored</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {rankedParticipants.map((participant, index) => (
+                            <TableRow key={participant.id}>
+                              <TableCell className="font-bold">#{index + 1}</TableCell>
+                              <TableCell className="font-semibold">{participant.name}</TableCell>
+                              <TableCell>{getAverageScore(participant.registrationId).toFixed(2)}</TableCell>
+                              <TableCell>
+                                {competitionScores.filter(s => s.registrationId === participant.registrationId).length} / {getAssignedJudges().length}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -334,8 +539,18 @@ export default function JudgeDashboard() {
               <DialogTitle>Select Winners</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
+              {!scoringStatus.complete && (
+                <Alert className="border-orange-500 bg-orange-50">
+                  <i className="fas fa-exclamation-triangle text-orange-600" />
+                  <AlertTitle className="text-orange-800">Warning</AlertTitle>
+                  <AlertDescription className="text-orange-700">
+                    {scoringStatus.message}. You can save winners as draft, but cannot publish until all scoring is complete.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <div>
-                <Label>1st Place</Label>
+                <Label>🥇 1st Place</Label>
                 <Select value={selectedRanks.rank1} onValueChange={(value) => setSelectedRanks(prev => ({ ...prev, rank1: value }))}>
                   <SelectTrigger className="rounded-[3rem]">
                     <SelectValue placeholder="Select winner" />
@@ -343,14 +558,15 @@ export default function JudgeDashboard() {
                   <SelectContent>
                     {rankedParticipants.map(p => (
                       <SelectItem key={p.registrationId} value={p.registrationId}>
-                        {p.name} - {getAverageScore(p.registrationId).toFixed(2)}
+                        {p.name} - Score: {getAverageScore(p.registrationId).toFixed(2)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              
               <div>
-                <Label>2nd Place</Label>
+                <Label>🥈 2nd Place</Label>
                 <Select value={selectedRanks.rank2} onValueChange={(value) => setSelectedRanks(prev => ({ ...prev, rank2: value }))}>
                   <SelectTrigger className="rounded-[3rem]">
                     <SelectValue placeholder="Select winner" />
@@ -358,14 +574,15 @@ export default function JudgeDashboard() {
                   <SelectContent>
                     {rankedParticipants.map(p => (
                       <SelectItem key={p.registrationId} value={p.registrationId}>
-                        {p.name} - {getAverageScore(p.registrationId).toFixed(2)}
+                        {p.name} - Score: {getAverageScore(p.registrationId).toFixed(2)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              
               <div>
-                <Label>3rd Place</Label>
+                <Label>🥉 3rd Place</Label>
                 <Select value={selectedRanks.rank3} onValueChange={(value) => setSelectedRanks(prev => ({ ...prev, rank3: value }))}>
                   <SelectTrigger className="rounded-[3rem]">
                     <SelectValue placeholder="Select winner" />
@@ -373,20 +590,37 @@ export default function JudgeDashboard() {
                   <SelectContent>
                     {rankedParticipants.map(p => (
                       <SelectItem key={p.registrationId} value={p.registrationId}>
-                        {p.name} - {getAverageScore(p.registrationId).toFixed(2)}
+                        {p.name} - Score: {getAverageScore(p.registrationId).toFixed(2)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              
               <div className="flex gap-4">
-                <Button onClick={handlePublishResults} className="flex-1 rounded-[3rem]">
+                <Button 
+                  onClick={handleSaveWinners} 
+                  variant="outline"
+                  className="flex-1 rounded-[3rem]"
+                >
+                  <i className="fas fa-save mr-2" />
+                  Save as Draft
+                </Button>
+                <Button 
+                  onClick={handlePublishResults} 
+                  className="flex-1 rounded-[3rem]"
+                  disabled={!scoringStatus.complete}
+                >
+                  <i className="fas fa-trophy mr-2" />
                   Publish Results
                 </Button>
-                <Button variant="outline" onClick={() => setResultsDialogOpen(false)} className="flex-1 rounded-[3rem]">
-                  Cancel
-                </Button>
               </div>
+              
+              {!scoringStatus.complete && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Publishing is disabled until all judges complete scoring
+                </p>
+              )}
             </div>
           </DialogContent>
         </Dialog>
