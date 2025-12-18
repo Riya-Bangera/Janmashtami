@@ -53,19 +53,18 @@ export function calculateAge(dateOfBirth: string): number {
 }
 
 export function getAgeGroup(age: number): AgeGroup {
-  if (age <= 8) return AgeGroup.Kids;
-  if (age <= 12) return AgeGroup.Juniors;
+  if (age <= 5) return AgeGroup.Kids;
+  if (age <= 9) return AgeGroup.Juniors;
   return AgeGroup.Teens;
 }
 
 export function calculateFee(competitions: Competition[], selectedIds: string[]): number {
   if (selectedIds.length === 0) return 0;
   
-  // Fixed fee structure: 100 for first competition, 50 for each additional
-  const baseFee = 100;
-  const additionalFee = 50;
+  // Fixed fee structure: Rs.100 per competition
+  const feePerCompetition = 100;
   
-  return baseFee + (selectedIds.length - 1) * additionalFee;
+  return selectedIds.length * feePerCompetition;
 }
 
 export function generateRegistrationId(): string {

@@ -10,48 +10,128 @@ const defaultSettings: Settings = {
 };
 
 const defaultCompetitions: Competition[] = [
+  // Krishna Kids (upto 5 years)
   {
-    id: 'comp-1',
-    name: 'Krishna Bhajan',
-    ageGroups: [AgeGroup.Kids, AgeGroup.Juniors, AgeGroup.Teens],
-    time: '10:00 AM',
-    rubrics: [
-      { id: 'r1', name: 'Voice Quality', maxScore: 10 },
-      { id: 'r2', name: 'Devotion', maxScore: 10 },
-      { id: 'r3', name: 'Presentation', maxScore: 10 }
-    ]
-  },
-  {
-    id: 'comp-2',
-    name: 'Flute Performance',
-    ageGroups: [AgeGroup.Juniors, AgeGroup.Teens],
-    time: '11:00 AM',
-    rubrics: [
-      { id: 'r1', name: 'Technique', maxScore: 10 },
-      { id: 'r2', name: 'Melody', maxScore: 10 },
-      { id: 'r3', name: 'Expression', maxScore: 10 }
-    ]
-  },
-  {
-    id: 'comp-3',
-    name: 'Krishna Story Telling',
+    id: 'comp-kids-1',
+    name: 'Colouring',
     ageGroups: [AgeGroup.Kids],
-    time: '12:00 PM',
+    time: '09:30 AM to 10:30 AM',
     rubrics: [
-      { id: 'r1', name: 'Content', maxScore: 10 },
-      { id: 'r2', name: 'Delivery', maxScore: 10 },
+      { id: 'r1', name: 'Creativity', maxScore: 10 },
+      { id: 'r2', name: 'Neatness', maxScore: 10 },
+      { id: 'r3', name: 'Color Selection', maxScore: 10 }
+    ]
+  },
+  {
+    id: 'comp-kids-2',
+    name: 'Bhagavad Gita Shloka Recitation',
+    ageGroups: [AgeGroup.Kids],
+    time: '10:30 AM to 11:30 AM',
+    rubrics: [
+      { id: 'r1', name: 'Pronunciation', maxScore: 10 },
+      { id: 'r2', name: 'Memory', maxScore: 10 },
       { id: 'r3', name: 'Confidence', maxScore: 10 }
     ]
   },
   {
-    id: 'comp-4',
-    name: 'Dance Performance',
-    ageGroups: [AgeGroup.Kids, AgeGroup.Juniors, AgeGroup.Teens],
-    time: '2:00 PM',
+    id: 'comp-kids-3',
+    name: 'Fancy Dress (Theme: Krishna Leela)',
+    ageGroups: [AgeGroup.Kids],
+    time: '11:30 AM to 12:30 PM',
+    rubrics: [
+      { id: 'r1', name: 'Costume', maxScore: 10 },
+      { id: 'r2', name: 'Presentation', maxScore: 10 },
+      { id: 'r3', name: 'Theme Relevance', maxScore: 10 }
+    ]
+  },
+  // Krishna Juniors (6 to 9 years)
+  {
+    id: 'comp-juniors-1',
+    name: 'Birthday Card Making for Sri Krishna',
+    ageGroups: [AgeGroup.Juniors],
+    time: '09:30 AM to 10:30 AM',
+    rubrics: [
+      { id: 'r1', name: 'Creativity', maxScore: 10 },
+      { id: 'r2', name: 'Design', maxScore: 10 },
+      { id: 'r3', name: 'Message', maxScore: 10 }
+    ]
+  },
+  {
+    id: 'comp-juniors-2',
+    name: 'Solo Dance Performance',
+    ageGroups: [AgeGroup.Juniors],
+    time: '09:30 AM to 10:30 AM',
     rubrics: [
       { id: 'r1', name: 'Choreography', maxScore: 10 },
       { id: 'r2', name: 'Rhythm', maxScore: 10 },
       { id: 'r3', name: 'Expression', maxScore: 10 }
+    ]
+  },
+  {
+    id: 'comp-juniors-3',
+    name: 'Bhagavad Gita Sloka Recitations',
+    ageGroups: [AgeGroup.Juniors],
+    time: '10:30 AM to 11:30 AM',
+    rubrics: [
+      { id: 'r1', name: 'Pronunciation', maxScore: 10 },
+      { id: 'r2', name: 'Memory', maxScore: 10 },
+      { id: 'r3', name: 'Confidence', maxScore: 10 }
+    ]
+  },
+  {
+    id: 'comp-juniors-4',
+    name: 'Fancy Dress (Theme: Krishna Leela)',
+    ageGroups: [AgeGroup.Juniors],
+    time: '11:30 AM to 12:30 PM',
+    rubrics: [
+      { id: 'r1', name: 'Costume', maxScore: 10 },
+      { id: 'r2', name: 'Presentation', maxScore: 10 },
+      { id: 'r3', name: 'Theme Relevance', maxScore: 10 }
+    ]
+  },
+  // Krishna Teens (10 to 15 years)
+  {
+    id: 'comp-teens-1',
+    name: 'Pot Painting',
+    ageGroups: [AgeGroup.Teens],
+    time: '09:30 AM to 10:30 AM',
+    rubrics: [
+      { id: 'r1', name: 'Creativity', maxScore: 10 },
+      { id: 'r2', name: 'Technique', maxScore: 10 },
+      { id: 'r3', name: 'Design', maxScore: 10 }
+    ]
+  },
+  {
+    id: 'comp-teens-2',
+    name: 'Solo Dance Performance',
+    ageGroups: [AgeGroup.Teens],
+    time: '09:30 AM to 10:30 AM',
+    rubrics: [
+      { id: 'r1', name: 'Choreography', maxScore: 10 },
+      { id: 'r2', name: 'Rhythm', maxScore: 10 },
+      { id: 'r3', name: 'Expression', maxScore: 10 }
+    ]
+  },
+  {
+    id: 'comp-teens-3',
+    name: 'Sloka Recitation - Bhagavad-Gita',
+    ageGroups: [AgeGroup.Teens],
+    time: '10:30 AM to 11:30 AM',
+    rubrics: [
+      { id: 'r1', name: 'Pronunciation', maxScore: 10 },
+      { id: 'r2', name: 'Memory', maxScore: 10 },
+      { id: 'r3', name: 'Confidence', maxScore: 10 }
+    ]
+  },
+  {
+    id: 'comp-teens-4',
+    name: 'Fancy Dress (Theme: Krishna Leela)',
+    ageGroups: [AgeGroup.Teens],
+    time: '11:30 AM to 12:30 PM',
+    rubrics: [
+      { id: 'r1', name: 'Costume', maxScore: 10 },
+      { id: 'r2', name: 'Presentation', maxScore: 10 },
+      { id: 'r3', name: 'Theme Relevance', maxScore: 10 }
     ]
   }
 ];

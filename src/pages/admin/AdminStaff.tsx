@@ -68,11 +68,9 @@ function StaffCard({ user, onEdit, onDelete, updateUser, competitions, toast }: 
                   <SelectValue placeholder="-- CATEGORY --" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.values(AgeGroup).map((ageGroup) => (
-                    <SelectItem key={ageGroup} value={ageGroup}>
-                      {ageGroup}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value={AgeGroup.Kids}>Kids (up to 5 years)</SelectItem>
+                  <SelectItem value={AgeGroup.Juniors}>Juniors (6 to 9 years)</SelectItem>
+                  <SelectItem value={AgeGroup.Teens}>Teens (10 to 15 years)</SelectItem>
                 </SelectContent>
               </Select>
               
