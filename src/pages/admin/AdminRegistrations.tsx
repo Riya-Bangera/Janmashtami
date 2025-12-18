@@ -1,0 +1,264 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useApp } from '@/contexts/AppContext';
+import { UserRole, AgeGroup, PaymentMethod, RegistrationStatus } from '@/types/types';
+import { calculateAge, getAgeGroup, calculateFee, generateRegistrationId } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
+export default function AdminRegistrations() {
+  const navigate = useNavigate();
+  const { currentUser, data, addRegistration } = useApp();
+  const { toast } = useToast();
+  const [filterAgeGroup, setFilterAgeGroup] = useState<string>('all');
+  const [filterCompetition, setFilterCompetition] = useState<string>('all');
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    dateOfBirth: '',
+    selectedCompetitions: [] as string[],
+    paymentMethod: PaymentMethod.Cash
+  });
+
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== UserRole.Admin) {
+      navigate('/admin/login');
+    }
+  }, [currentUser, navigate]);
+
+  if (!currentUser) return null;
+
+  const filteredRegistrations = data.registrations.filter(reg => {
+    if (filterAgeGroup !== 'all' && reg.ageGroup !== filterAgeGroup) return false;
+    if (filterCompetition !== 'all' && !reg.competitions.includes(filterCompetition)) return false;
+    return true;
+  });
+
+  const handleCompetitionToggle = (competitionId: string) => {
+    setFormData(prev => {
+      const selected = prev.selectedCompetitions.includes(competitionId)
+        ? prev.selectedCompetitions.filter(id => id !== competitionId)
+        : [...prev.selectedCompetitions, competitionId];
+      return { ...prev, selectedCompetitions: selected };
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.dateOfBirth || formData.selectedCompetitions.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const age = calculateAge(formData.dateOfBirth);
+    const ageGroup = getAgeGroup(age);
+    const totalFee = calculateFee(data.competitions, formData.selectedCompetitions);
+    const registrationId = generateRegistrationId();
+
+    addRegistration({
+      registrationId,
+      name: formData.name,
+      dateOfBirth: formData.dateOfBirth,
+      age,
+      ageGroup,
+      competitions: formData.selectedCompetitions,
+      totalFee,
+      paymentMethod: formData.paymentMethod,
+      status: RegistrationStatus.Confirmed
+    });
+
+    toast({
+      title: 'Success',
+      description: 'On-spot registration added successfully'
+    });
+
+    setFormData({
+      name: '',
+      dateOfBirth: '',
+      selectedCompetitions: [],
+      paymentMethod: PaymentMethod.Cash
+    });
+    setDialogOpen(false);
+  };
+
+  const getCompetitionNames = (competitionIds: string[]) => {
+    return competitionIds
+      .map(id => data.competitions.find(c => c.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={() => navigate('/admin/dashboard')}>
+              <i className="fas fa-arrow-left mr-2" />
+            </Button>
+            <h1 className="text-2xl font-bold">Registration Management</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex flex-wrap gap-4 mb-6">
+          <div className="flex-1 min-w-[200px]">
+            <Label>Filter by Age Group</Label>
+            <Select value={filterAgeGroup} onValueChange={setFilterAgeGroup}>
+              <SelectTrigger className="rounded-[3rem]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Age Groups</SelectItem>
+                <SelectItem value={AgeGroup.Kids}>{AgeGroup.Kids}</SelectItem>
+                <SelectItem value={AgeGroup.Juniors}>{AgeGroup.Juniors}</SelectItem>
+                <SelectItem value={AgeGroup.Teens}>{AgeGroup.Teens}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex-1 min-w-[200px]">
+            <Label>Filter by Competition</Label>
+            <Select value={filterCompetition} onValueChange={setFilterCompetition}>
+              <SelectTrigger className="rounded-[3rem]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Competitions</SelectItem>
+                {data.competitions.map(comp => (
+                  <SelectItem key={comp.id} value={comp.id}>{comp.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-end">
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-[3rem]">
+                  <i className="fas fa-plus mr-2" />
+                  On-Spot Registration
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add On-Spot Registration</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className="rounded-[3rem]"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dob">Date of Birth</Label>
+                    <Input
+                      id="dob"
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                      className="rounded-[3rem]"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Select Competitions</Label>
+                    <div className="space-y-2 mt-2">
+                      {data.competitions.map((comp) => (
+                        <div key={comp.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`comp-${comp.id}`}
+                            checked={formData.selectedCompetitions.includes(comp.id)}
+                            onCheckedChange={() => handleCompetitionToggle(comp.id)}
+                          />
+                          <Label htmlFor={`comp-${comp.id}`} className="cursor-pointer">
+                            {comp.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Payment Method</Label>
+                    <Select
+                      value={formData.paymentMethod}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value as PaymentMethod }))}
+                    >
+                      <SelectTrigger className="rounded-[3rem]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={PaymentMethod.Cash}>Cash</SelectItem>
+                        <SelectItem value={PaymentMethod.Online}>Online</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="w-full rounded-[3rem]">
+                    Add Registration
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        <Card className="rounded-[3rem]">
+          <CardHeader>
+            <CardTitle>All Registrations ({filteredRegistrations.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Registration ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Age</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Competitions</TableHead>
+                    <TableHead>Fee</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRegistrations.map((reg) => (
+                    <TableRow key={reg.id}>
+                      <TableCell className="font-mono text-sm">{reg.registrationId}</TableCell>
+                      <TableCell className="font-semibold">{reg.name}</TableCell>
+                      <TableCell>{reg.age}</TableCell>
+                      <TableCell>{reg.ageGroup}</TableCell>
+                      <TableCell className="max-w-xs truncate">{getCompetitionNames(reg.competitions)}</TableCell>
+                      <TableCell>₹{reg.totalFee}</TableCell>
+                      <TableCell className="capitalize">{reg.paymentMethod}</TableCell>
+                      <TableCell className="capitalize">{reg.status}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

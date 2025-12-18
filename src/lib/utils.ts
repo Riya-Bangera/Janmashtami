@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { AgeGroup, type Competition } from "@/types/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,10 +31,57 @@ export function formatDate(
   date: Date | string | number,
   opts: Intl.DateTimeFormatOptions = {}
 ) {
-  return new Intl.DateTimeFormat("zh-CN", {
+  return new Intl.DateTimeFormat("en-US", {
     month: opts.month ?? "long",
     day: opts.day ?? "numeric",
     year: opts.year ?? "numeric",
     ...opts,
   }).format(new Date(date));
+}
+
+export function calculateAge(dateOfBirth: string): number {
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age;
+}
+
+export function getAgeGroup(age: number): AgeGroup {
+  if (age <= 8) return AgeGroup.Kids;
+  if (age <= 12) return AgeGroup.Juniors;
+  return AgeGroup.Teens;
+}
+
+export function calculateFee(competitions: Competition[], selectedIds: string[]): number {
+  if (selectedIds.length === 0) return 0;
+  
+  const firstCompetition = competitions.find(c => c.id === selectedIds[0]);
+  if (!firstCompetition) return 0;
+  
+  let total = firstCompetition.fee;
+  
+  for (let i = 1; i < selectedIds.length; i++) {
+    const comp = competitions.find(c => c.id === selectedIds[i]);
+    if (comp) {
+      total += comp.additionalFee;
+    }
+  }
+  
+  return total;
+}
+
+export function generateRegistrationId(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 7);
+  return `REG-${timestamp}-${random}`.toUpperCase();
+}
+
+export function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
