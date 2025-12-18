@@ -17,9 +17,10 @@ export enum PaymentMethod {
 }
 
 export enum RegistrationStatus {
-  Pending = 'pending',
-  Confirmed = 'confirmed',
-  Cancelled = 'cancelled'
+  Pending = 'Pending',
+  Confirmed = 'Confirmed',
+  Rejected = 'Rejected',
+  Cancelled = 'Cancelled'
 }
 
 export interface User {

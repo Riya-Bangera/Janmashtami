@@ -6,23 +6,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole, AgeGroup, PaymentMethod, RegistrationStatus } from '@/types/types';
 import { calculateAge, getAgeGroup, calculateFee, generateRegistrationId } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { sendReceipt } from '@/services/receiptService';
+import type { Registration } from '@/types/types';
 
 export default function AdminRegistrations() {
   const navigate = useNavigate();
-  const { currentUser, data, addRegistration } = useApp();
+  const { currentUser, data, addRegistration, updateRegistration } = useApp();
   const { toast } = useToast();
   const [filterAgeGroup, setFilterAgeGroup] = useState<string>('all');
   const [filterCompetition, setFilterCompetition] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [proofDialogOpen, setProofDialogOpen] = useState(false);
   const [selectedProof, setSelectedProof] = useState<string>('');
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
+  const [declineReason, setDeclineReason] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -135,6 +143,84 @@ export default function AdminRegistrations() {
         variant: 'destructive'
       });
     }
+  };
+
+  const handleApproveClick = (registration: Registration) => {
+    setSelectedRegistration(registration);
+    setApproveDialogOpen(true);
+  };
+
+  const handleDeclineClick = (registration: Registration) => {
+    setSelectedRegistration(registration);
+    setDeclineReason('');
+    setDeclineDialogOpen(true);
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!selectedRegistration) return;
+
+    setIsProcessing(true);
+    
+    try {
+      // Update registration status to Confirmed
+      updateRegistration(selectedRegistration.id, {
+        status: RegistrationStatus.Confirmed
+      });
+
+      // Send receipt to parent's phone
+      const receiptResult = await sendReceipt(selectedRegistration, data.competitions);
+
+      if (receiptResult.success) {
+        toast({
+          title: 'Registration Approved',
+          description: `Registration approved and receipt sent to ${selectedRegistration.parentPhone}`,
+        });
+      } else {
+        toast({
+          title: 'Registration Approved',
+          description: 'Registration approved but receipt sending failed. Please contact parent manually.',
+          variant: 'default'
+        });
+      }
+
+      setApproveDialogOpen(false);
+      setSelectedRegistration(null);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to approve registration. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDeclineConfirm = () => {
+    if (!selectedRegistration) return;
+
+    if (!declineReason.trim()) {
+      toast({
+        title: 'Reason Required',
+        description: 'Please provide a reason for declining the registration',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Update registration status to Rejected
+    updateRegistration(selectedRegistration.id, {
+      status: RegistrationStatus.Rejected
+    });
+
+    toast({
+      title: 'Registration Declined',
+      description: `Registration has been declined. Reason: ${declineReason}`,
+    });
+
+    setDeclineDialogOpen(false);
+    setSelectedRegistration(null);
+    setDeclineReason('');
   };
 
   return (
@@ -343,24 +429,52 @@ export default function AdminRegistrations() {
                       </TableCell>
                       <TableCell>
                         <Badge 
-                          variant={reg.status === RegistrationStatus.Confirmed ? 'default' : 'outline'}
+                          variant={
+                            reg.status === RegistrationStatus.Confirmed ? 'default' : 
+                            reg.status === RegistrationStatus.Rejected ? 'destructive' : 
+                            'outline'
+                          }
                           className="rounded-[3rem] capitalize"
                         >
                           {reg.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {reg.paymentMethod === PaymentMethod.Online && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewProof(reg.paymentScreenshot)}
-                            className="rounded-[3rem]"
-                          >
-                            <i className="fas fa-image mr-2" />
-                            View Proof
-                          </Button>
-                        )}
+                        <div className="flex gap-2">
+                          {reg.paymentMethod === PaymentMethod.Online && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewProof(reg.paymentScreenshot)}
+                              className="rounded-[3rem]"
+                            >
+                              <i className="fas fa-image mr-2" />
+                              View Proof
+                            </Button>
+                          )}
+                          {reg.status === RegistrationStatus.Pending && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleApproveClick(reg)}
+                                className="rounded-[3rem] bg-green-600 hover:bg-green-700"
+                              >
+                                <i className="fas fa-check mr-2" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeclineClick(reg)}
+                                className="rounded-[3rem]"
+                              >
+                                <i className="fas fa-times mr-2" />
+                                Decline
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -389,6 +503,102 @@ export default function AdminRegistrations() {
                 Close
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Approve Confirmation Dialog */}
+        <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+          <DialogContent className="rounded-[3rem]">
+            <DialogHeader>
+              <DialogTitle>Approve Registration</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to approve this registration? A receipt will be sent to the parent's phone number.
+              </DialogDescription>
+            </DialogHeader>
+            {selectedRegistration && (
+              <div className="space-y-2 py-4">
+                <p><strong>Registration ID:</strong> {selectedRegistration.registrationId}</p>
+                <p><strong>Child Name:</strong> {selectedRegistration.name}</p>
+                <p><strong>Parent Name:</strong> {selectedRegistration.parentName}</p>
+                <p><strong>Phone Number:</strong> {selectedRegistration.parentPhone}</p>
+                <p><strong>Total Fee:</strong> ₹{selectedRegistration.totalFee}</p>
+              </div>
+            )}
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setApproveDialogOpen(false)}
+                disabled={isProcessing}
+                className="rounded-[3rem]"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleApproveConfirm}
+                disabled={isProcessing}
+                className="rounded-[3rem] bg-green-600 hover:bg-green-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2" />
+                    Sending Receipt...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-check mr-2" />
+                    Approve & Send Receipt
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Decline Confirmation Dialog */}
+        <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
+          <DialogContent className="rounded-[3rem]">
+            <DialogHeader>
+              <DialogTitle>Decline Registration</DialogTitle>
+              <DialogDescription>
+                Please provide a reason for declining this registration. This will help maintain records.
+              </DialogDescription>
+            </DialogHeader>
+            {selectedRegistration && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <p><strong>Registration ID:</strong> {selectedRegistration.registrationId}</p>
+                  <p><strong>Child Name:</strong> {selectedRegistration.name}</p>
+                  <p><strong>Parent Name:</strong> {selectedRegistration.parentName}</p>
+                </div>
+                <div>
+                  <Label htmlFor="declineReason">Reason for Declining *</Label>
+                  <Textarea
+                    id="declineReason"
+                    value={declineReason}
+                    onChange={(e) => setDeclineReason(e.target.value)}
+                    placeholder="e.g., Invalid payment proof, duplicate registration, etc."
+                    className="rounded-[3rem] min-h-[100px]"
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setDeclineDialogOpen(false)}
+                className="rounded-[3rem]"
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={handleDeclineConfirm}
+                className="rounded-[3rem]"
+              >
+                <i className="fas fa-times mr-2" />
+                Decline Registration
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
