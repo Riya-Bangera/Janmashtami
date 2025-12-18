@@ -245,7 +245,7 @@ export default function AdminRegistrations() {
                               onCheckedChange={() => handleCompetitionToggle(comp.id)}
                             />
                             <Label htmlFor={`comp-${comp.id}`} className="cursor-pointer">
-                              {comp.name} - ₹{comp.fee}
+                              {comp.name}
                             </Label>
                           </div>
                         ))}

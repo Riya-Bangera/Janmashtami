@@ -22,8 +22,6 @@ export default function AdminCompetitions() {
   const [formData, setFormData] = useState({
     name: '',
     time: '',
-    fee: 100,
-    additionalFee: 50,
     ageGroups: [] as AgeGroup[],
     rubrics: [{ id: 'r1', name: '', maxScore: 10 }] as Rubric[]
   });
@@ -82,8 +80,6 @@ export default function AdminCompetitions() {
     addCompetition({
       name: formData.name,
       time: formData.time,
-      fee: formData.fee,
-      additionalFee: formData.additionalFee,
       ageGroups: formData.ageGroups,
       rubrics: formData.rubrics
     });
@@ -96,8 +92,6 @@ export default function AdminCompetitions() {
     setFormData({
       name: '',
       time: '',
-      fee: 100,
-      additionalFee: 50,
       ageGroups: [],
       rubrics: [{ id: 'r1', name: '', maxScore: 10 }]
     });
@@ -121,8 +115,6 @@ export default function AdminCompetitions() {
       setFormData({
         name: comp.name,
         time: comp.time || '',
-        fee: comp.fee,
-        additionalFee: comp.additionalFee,
         ageGroups: comp.ageGroups,
         rubrics: comp.rubrics
       });
@@ -147,8 +139,6 @@ export default function AdminCompetitions() {
     updateCompetition(selectedCompetition, {
       name: formData.name,
       time: formData.time,
-      fee: formData.fee,
-      additionalFee: formData.additionalFee,
       ageGroups: formData.ageGroups,
       rubrics: formData.rubrics
     });
@@ -214,30 +204,6 @@ export default function AdminCompetitions() {
                     className="rounded-[3rem]"
                     placeholder="e.g., 10:00 AM"
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="fee">Base Fee (₹)</Label>
-                    <Input
-                      id="fee"
-                      type="number"
-                      value={formData.fee}
-                      onChange={(e) => setFormData(prev => ({ ...prev, fee: Number(e.target.value) }))}
-                      className="rounded-[3rem]"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="additionalFee">Additional Fee (₹)</Label>
-                    <Input
-                      id="additionalFee"
-                      type="number"
-                      value={formData.additionalFee}
-                      onChange={(e) => setFormData(prev => ({ ...prev, additionalFee: Number(e.target.value) }))}
-                      className="rounded-[3rem]"
-                      required
-                    />
-                  </div>
                 </div>
                 <div>
                   <Label>Age Groups</Label>
@@ -324,7 +290,6 @@ export default function AdminCompetitions() {
                         <TableRow>
                           <TableHead>Name</TableHead>
                           <TableHead>Time</TableHead>
-                          <TableHead>Fee</TableHead>
                           <TableHead>Rubrics</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
@@ -334,7 +299,6 @@ export default function AdminCompetitions() {
                           <TableRow key={comp.id}>
                             <TableCell className="font-semibold">{comp.name}</TableCell>
                             <TableCell>{comp.time}</TableCell>
-                            <TableCell>₹{comp.fee} / ₹{comp.additionalFee}</TableCell>
                             <TableCell>
                               <div className="text-sm">
                                 {comp.rubrics.map((r, idx) => (
@@ -399,30 +363,6 @@ export default function AdminCompetitions() {
                   className="rounded-[3rem]"
                   placeholder="e.g., 10:00 AM"
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-fee">Base Fee (₹)</Label>
-                  <Input
-                    id="edit-fee"
-                    type="number"
-                    value={formData.fee}
-                    onChange={(e) => setFormData(prev => ({ ...prev, fee: Number(e.target.value) }))}
-                    className="rounded-[3rem]"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-additionalFee">Additional Fee (₹)</Label>
-                  <Input
-                    id="edit-additionalFee"
-                    type="number"
-                    value={formData.additionalFee}
-                    onChange={(e) => setFormData(prev => ({ ...prev, additionalFee: Number(e.target.value) }))}
-                    className="rounded-[3rem]"
-                    required
-                  />
-                </div>
               </div>
               <div>
                 <Label>Age Groups</Label>

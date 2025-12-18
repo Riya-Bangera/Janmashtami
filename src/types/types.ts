@@ -35,8 +35,6 @@ export interface Competition {
   name: string;
   ageGroups: AgeGroup[];
   time?: string;
-  fee: number;
-  additionalFee: number;
   rubrics: Rubric[];
 }
 

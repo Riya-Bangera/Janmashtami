@@ -220,7 +220,7 @@ export default function Register() {
                         {comp.name}
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        Time: {comp.time} | Fee: ₹{comp.fee} (Additional: ₹{comp.additionalFee})
+                        Time: {comp.time}
                       </p>
                     </div>
                   </div>

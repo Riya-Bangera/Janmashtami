@@ -15,8 +15,6 @@ const defaultCompetitions: Competition[] = [
     name: 'Krishna Bhajan',
     ageGroups: [AgeGroup.Kids, AgeGroup.Juniors, AgeGroup.Teens],
     time: '10:00 AM',
-    fee: 100,
-    additionalFee: 50,
     rubrics: [
       { id: 'r1', name: 'Voice Quality', maxScore: 10 },
       { id: 'r2', name: 'Devotion', maxScore: 10 },
@@ -28,8 +26,6 @@ const defaultCompetitions: Competition[] = [
     name: 'Flute Performance',
     ageGroups: [AgeGroup.Juniors, AgeGroup.Teens],
     time: '11:00 AM',
-    fee: 100,
-    additionalFee: 50,
     rubrics: [
       { id: 'r1', name: 'Technique', maxScore: 10 },
       { id: 'r2', name: 'Melody', maxScore: 10 },
@@ -41,8 +37,6 @@ const defaultCompetitions: Competition[] = [
     name: 'Krishna Story Telling',
     ageGroups: [AgeGroup.Kids],
     time: '12:00 PM',
-    fee: 100,
-    additionalFee: 50,
     rubrics: [
       { id: 'r1', name: 'Content', maxScore: 10 },
       { id: 'r2', name: 'Delivery', maxScore: 10 },
@@ -54,8 +48,6 @@ const defaultCompetitions: Competition[] = [
     name: 'Dance Performance',
     ageGroups: [AgeGroup.Kids, AgeGroup.Juniors, AgeGroup.Teens],
     time: '2:00 PM',
-    fee: 100,
-    additionalFee: 50,
     rubrics: [
       { id: 'r1', name: 'Choreography', maxScore: 10 },
       { id: 'r2', name: 'Rhythm', maxScore: 10 },

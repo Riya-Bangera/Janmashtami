@@ -61,19 +61,11 @@ export function getAgeGroup(age: number): AgeGroup {
 export function calculateFee(competitions: Competition[], selectedIds: string[]): number {
   if (selectedIds.length === 0) return 0;
   
-  const firstCompetition = competitions.find(c => c.id === selectedIds[0]);
-  if (!firstCompetition) return 0;
+  // Fixed fee structure: 100 for first competition, 50 for each additional
+  const baseFee = 100;
+  const additionalFee = 50;
   
-  let total = firstCompetition.fee;
-  
-  for (let i = 1; i < selectedIds.length; i++) {
-    const comp = competitions.find(c => c.id === selectedIds[i]);
-    if (comp) {
-      total += comp.additionalFee;
-    }
-  }
-  
-  return total;
+  return baseFee + (selectedIds.length - 1) * additionalFee;
 }
 
 export function generateRegistrationId(): string {
