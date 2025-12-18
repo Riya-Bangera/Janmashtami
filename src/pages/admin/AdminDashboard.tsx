@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole, RegistrationStatus } from '@/types/types';
 
@@ -22,6 +21,14 @@ export default function AdminDashboard() {
   const totalRevenue = data.registrations.reduce((sum, reg) => sum + reg.totalFee, 0);
   const confirmedRegistrations = data.registrations.filter(r => r.status === RegistrationStatus.Confirmed).length;
   const pendingRegistrations = data.registrations.filter(r => r.status === RegistrationStatus.Pending).length;
+  
+  // Calculate automated verification stats
+  const autoVerifiedCount = data.registrations.filter(r => 
+    r.verificationResult?.verified && r.status === RegistrationStatus.Confirmed
+  ).length;
+  const manualReviewCount = data.registrations.filter(r => 
+    r.verificationResult && !r.verificationResult.verified && r.status === RegistrationStatus.Pending
+  ).length;
 
   const handleLogout = () => {
     logout();
@@ -78,30 +85,31 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-bold">{confirmedRegistrations}</p>
+              {autoVerifiedCount > 0 && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {autoVerifiedCount} auto-verified
+                </p>
+              )}
             </CardContent>
           </Card>
 
-          <Card className="rounded-[3rem] border-2 bg-yellow-50 dark:bg-yellow-950/20">
+          <Card className="rounded-[3rem] border-2 bg-blue-50 dark:bg-blue-950/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <i className="fas fa-clock text-yellow-600" />
-                Pending Verification
+                <i className="fas fa-robot text-blue-600" />
+                Automated System
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <p className="text-4xl font-bold">{pendingRegistrations}</p>
-                {pendingRegistrations > 0 && (
-                  <Badge variant="destructive" className="text-sm">
-                    Action Required
-                  </Badge>
-                )}
-              </div>
+              <p className="text-4xl font-bold">{autoVerifiedCount}</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Instantly verified
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {pendingRegistrations > 0 && (
+        {manualReviewCount > 0 && (
           <Card className="rounded-[3rem] border-2 bg-yellow-50 dark:bg-yellow-950/20 mb-8">
             <CardContent className="py-6">
               <div className="flex items-center justify-between">
@@ -109,20 +117,20 @@ export default function AdminDashboard() {
                   <i className="fas fa-exclamation-triangle text-yellow-600 text-3xl" />
                   <div>
                     <h3 className="text-xl font-bold">
-                      {pendingRegistrations} Payment{pendingRegistrations > 1 ? 's' : ''} Awaiting Verification
+                      {manualReviewCount} Registration{manualReviewCount > 1 ? 's' : ''} Flagged for Review
                     </h3>
                     <p className="text-muted-foreground">
-                      Review payment screenshots and approve or reject registrations
+                      Automated verification requires manual review for these registrations
                     </p>
                   </div>
                 </div>
                 <Button
-                  onClick={() => navigate('/admin/payment-verification')}
+                  onClick={() => navigate('/admin/registrations')}
                   size="lg"
                   className="rounded-[3rem]"
                 >
-                  <i className="fas fa-check-double mr-2" />
-                  Verify Payments
+                  <i className="fas fa-eye mr-2" />
+                  Review Registrations
                 </Button>
               </div>
             </CardContent>
@@ -130,23 +138,6 @@ export default function AdminDashboard() {
         )}
 
         <div className="grid md:grid-cols-2 gap-6">
-          <Card className="rounded-[3rem] border-2 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/payment-verification')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <i className="fas fa-money-check-alt text-primary text-2xl" />
-                Payment Verification
-                {pendingRegistrations > 0 && (
-                  <Badge variant="destructive">{pendingRegistrations}</Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Review payment screenshots and approve or reject online registrations
-              </p>
-            </CardContent>
-          </Card>
-
           <Card className="rounded-[3rem] border-2 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/admin/registrations')}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3 text-xl">
@@ -158,6 +149,11 @@ export default function AdminDashboard() {
               <p className="text-muted-foreground">
                 View all registrations, add on-spot entries, and manage participant data
               </p>
+              {manualReviewCount > 0 && (
+                <p className="text-sm text-yellow-600 font-semibold mt-2">
+                  {manualReviewCount} pending manual review
+                </p>
+              )}
             </CardContent>
           </Card>
 

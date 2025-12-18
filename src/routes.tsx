@@ -6,7 +6,6 @@ import HallOfFame from './pages/HallOfFame';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminRegistrations from './pages/admin/AdminRegistrations';
-import AdminPaymentVerification from './pages/admin/AdminPaymentVerification';
 import AdminStaff from './pages/admin/AdminStaff';
 import AdminCompetitions from './pages/admin/AdminCompetitions';
 import AdminSettings from './pages/admin/AdminSettings';
@@ -57,11 +56,6 @@ const routes: RouteConfig[] = [
     name: 'Admin Registrations',
     path: '/admin/registrations',
     element: <AdminRegistrations />
-  },
-  {
-    name: 'Admin Payment Verification',
-    path: '/admin/payment-verification',
-    element: <AdminPaymentVerification />
   },
   {
     name: 'Admin Staff',

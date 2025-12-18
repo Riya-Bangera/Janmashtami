@@ -231,7 +231,13 @@ export default function RegistrationConfirmation() {
         {isPending && (
           <Alert className="mb-6 rounded-[3rem]">
             <AlertDescription>
-              <strong>Payment Verification Pending:</strong> Our admin team is reviewing your payment screenshot. You will be notified once your registration is approved. Please check back later or contact us if you have questions.
+              <strong>Payment Verification Pending:</strong> Our automated system is processing your payment screenshot. If additional verification is needed, our team will review it shortly. You will be notified once your registration is approved.
+              {registration.verificationResult && (
+                <div className="mt-2 text-sm">
+                  <p><strong>Verification Status:</strong> {registration.verificationResult.reason}</p>
+                  <p><strong>Confidence:</strong> {(registration.verificationResult.confidence * 100).toFixed(0)}%</p>
+                </div>
+              )}
             </AlertDescription>
           </Alert>
         )}
@@ -320,6 +326,28 @@ export default function RegistrationConfirmation() {
                     {isPending ? 'Pending Verification' : 'Verified'}
                   </Badge>
                 </div>
+                {registration.verificationResult && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Verification Method</span>
+                      <span className="font-semibold">Automated System</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Confidence Score</span>
+                      <span className="font-semibold">
+                        {(registration.verificationResult.confidence * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                    {registration.verificationResult.transactionId && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Transaction ID</span>
+                        <span className="font-semibold text-xs">
+                          {registration.verificationResult.transactionId}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div className="flex justify-between items-center text-xl font-bold pt-4 border-t">
                   <span>Total Fee</span>
                   <span className="text-primary">₹{registration.totalFee}</span>

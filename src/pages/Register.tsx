@@ -11,12 +11,14 @@ import { calculateAge, getAgeGroup, calculateFee, generateRegistrationId } from 
 import { AgeGroup, PaymentMethod, RegistrationStatus } from '@/types/types';
 import { useToast } from '@/hooks/use-toast';
 import QRCodeDataUrl from '@/components/ui/qrcodedataurl';
+import { verifyPaymentScreenshot } from '@/services/paymentVerification';
 
 export default function Register() {
   const navigate = useNavigate();
   const { data, addRegistration } = useApp();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const [isVerifying, setIsVerifying] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -94,7 +96,7 @@ export default function Register() {
     }
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     if (!formData.paymentScreenshot) {
       toast({
         title: 'Error',
@@ -104,29 +106,80 @@ export default function Register() {
       return;
     }
 
-    const registrationId = generateRegistrationId();
-    
-    addRegistration({
-      registrationId,
-      name: formData.name,
-      dateOfBirth: formData.dateOfBirth,
-      age: formData.age,
-      ageGroup: formData.ageGroup,
-      competitions: formData.selectedCompetitions,
-      totalFee: formData.totalFee,
-      paymentMethod: PaymentMethod.Online,
-      paymentScreenshot: formData.paymentScreenshot,
-      status: RegistrationStatus.Pending,
-      parentName: formData.parentName,
-      parentPhone: formData.parentPhone
-    });
+    setIsVerifying(true);
 
-    toast({
-      title: 'Registration Submitted',
-      description: 'Your registration is pending admin verification. You will be notified once approved.'
-    });
+    try {
+      toast({
+        title: 'Processing Payment',
+        description: 'Verifying your payment screenshot... This may take a few moments.'
+      });
 
-    navigate(`/registration-confirmation/${registrationId}`);
+      // Trigger automated backend verification
+      const verificationResult = await verifyPaymentScreenshot(
+        formData.paymentScreenshot,
+        formData.totalFee
+      );
+
+      const registrationId = generateRegistrationId();
+      
+      // Determine status based on verification result
+      let status = RegistrationStatus.Pending;
+      let toastMessage = 'Your registration is pending verification.';
+      
+      if (verificationResult.verified) {
+        status = RegistrationStatus.Confirmed;
+        toastMessage = 'Payment verified! Your registration is confirmed.';
+      } else if (!verificationResult.success) {
+        toast({
+          title: 'Verification Error',
+          description: verificationResult.reason || 'Unable to verify payment. Please try again.',
+          variant: 'destructive'
+        });
+        setIsVerifying(false);
+        return;
+      } else {
+        // Flagged for manual review
+        toastMessage = 'Payment verification pending. Our team will review your screenshot shortly.';
+      }
+
+      addRegistration({
+        registrationId,
+        name: formData.name,
+        dateOfBirth: formData.dateOfBirth,
+        age: formData.age,
+        ageGroup: formData.ageGroup,
+        competitions: formData.selectedCompetitions,
+        totalFee: formData.totalFee,
+        paymentMethod: PaymentMethod.Online,
+        paymentScreenshot: formData.paymentScreenshot,
+        status,
+        parentName: formData.parentName,
+        parentPhone: formData.parentPhone,
+        verificationResult: {
+          verified: verificationResult.verified,
+          confidence: verificationResult.confidence,
+          reason: verificationResult.reason || '',
+          transactionId: verificationResult.transactionId,
+          verifiedAt: new Date().toISOString()
+        }
+      });
+
+      toast({
+        title: status === RegistrationStatus.Confirmed ? 'Registration Confirmed!' : 'Registration Submitted',
+        description: toastMessage
+      });
+
+      navigate(`/registration-confirmation/${registrationId}`);
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process registration. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const availableCompetitions = data.competitions.filter(comp =>
@@ -345,16 +398,32 @@ export default function Register() {
 
               <Alert className="bg-primary/10">
                 <AlertDescription>
-                  <strong>Note:</strong> Your registration will be in "Pending" status until our admin team verifies your payment screenshot. You will receive confirmation once approved.
+                  <strong>Automated Verification:</strong> Our system will automatically verify your payment screenshot using advanced image recognition technology. Most payments are verified instantly. If verification requires manual review, our team will process it shortly.
                 </AlertDescription>
               </Alert>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1 rounded-[3rem]">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep(2)} 
+                  className="flex-1 rounded-[3rem]"
+                  disabled={isVerifying}
+                >
                   Back
                 </Button>
-                <Button onClick={handleFinalSubmit} className="flex-1 rounded-[3rem]">
-                  Submit Registration
+                <Button 
+                  onClick={handleFinalSubmit} 
+                  className="flex-1 rounded-[3rem]"
+                  disabled={isVerifying}
+                >
+                  {isVerifying ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2" />
+                      Verifying Payment...
+                    </>
+                  ) : (
+                    'Submit Registration'
+                  )}
                 </Button>
               </div>
             </CardContent>

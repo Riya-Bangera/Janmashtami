@@ -62,6 +62,13 @@ export interface Registration {
   calledToStage?: boolean;
   parentName: string;
   parentPhone: string;
+  verificationResult?: {
+    verified: boolean;
+    confidence: number;
+    reason: string;
+    transactionId?: string;
+    verifiedAt: string;
+  };
 }
 
 export interface Score {
