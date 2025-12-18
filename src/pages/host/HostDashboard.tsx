@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/contexts/AppContext';
-import { UserRole } from '@/types/types';
+import { UserRole, AgeGroup } from '@/types/types';
 import { useToast } from '@/hooks/use-toast';
 
 export default function HostDashboard() {
   const navigate = useNavigate();
   const { currentUser, data, updateRegistration, getResultByCompetition, logout } = useApp();
   const { toast } = useToast();
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | ''>('');
   const [selectedCompetition, setSelectedCompetition] = useState<string>('');
   const [showWinners, setShowWinners] = useState(false);
 
@@ -21,7 +22,17 @@ export default function HostDashboard() {
     }
   }, [currentUser, navigate]);
 
+  // Reset competition when age group changes
+  useEffect(() => {
+    setSelectedCompetition('');
+  }, [selectedAgeGroup]);
+
   if (!currentUser) return null;
+
+  // Filter competitions by selected age group
+  const filteredCompetitions = selectedAgeGroup
+    ? data.competitions.filter(comp => comp.ageGroups.includes(selectedAgeGroup))
+    : [];
 
   const selectedComp = data.competitions.find(c => c.id === selectedCompetition);
   
@@ -70,19 +81,40 @@ export default function HostDashboard() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <Card className="rounded-[3rem] mb-6">
           <CardHeader>
-            <CardTitle>Select Competition</CardTitle>
+            <CardTitle>Select Age Category & Competition</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
-              <SelectTrigger className="rounded-[3rem]">
-                <SelectValue placeholder="Choose a competition" />
-              </SelectTrigger>
-              <SelectContent>
-                {data.competitions.map(comp => (
-                  <SelectItem key={comp.id} value={comp.id}>{comp.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Age Category</label>
+              <Select value={selectedAgeGroup} onValueChange={(value) => setSelectedAgeGroup(value as AgeGroup)}>
+                <SelectTrigger className="rounded-[3rem]">
+                  <SelectValue placeholder="Choose age category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={AgeGroup.Kids}>Kids (up to 5 years)</SelectItem>
+                  <SelectItem value={AgeGroup.Juniors}>Juniors (6 to 9 years)</SelectItem>
+                  <SelectItem value={AgeGroup.Teens}>Teens (10 to 15 years)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Competition</label>
+              <Select 
+                value={selectedCompetition} 
+                onValueChange={setSelectedCompetition}
+                disabled={!selectedAgeGroup}
+              >
+                <SelectTrigger className="rounded-[3rem]">
+                  <SelectValue placeholder={selectedAgeGroup ? "Choose a competition" : "Select age category first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredCompetitions.map(comp => (
+                    <SelectItem key={comp.id} value={comp.id}>{comp.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
 
