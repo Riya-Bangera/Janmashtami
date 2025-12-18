@@ -15,6 +15,7 @@ A comprehensive web-based competition management platform for organizing and man
 - **Data Persistence**: localStorage (key: iskcon_v23_db)
 - **Routing**: react-router-dom with HashRouter
 - **Icons**: FontAwesome 6.4.0 (primary brand mark: fa-spa Lotus symbol)
+- **PDF Generation**: jsPDF library for receipt download
 
 ### 2.2 Data Storage
 - All data persists in browser localStorage
@@ -66,23 +67,39 @@ Based on the provided competition schedule (WhatsApp Image 2025-12-18 at 6.22.28
   - Age Category
   - Competition Name
   - Winners (Rank 1, 2, 3)\n- Display event poster images: image.png, screenshot.png, WhatsApp Image 2025-12-18 at 6.22.28 PM.jpeg
-
-#### 5.1.2 Multi-Step Registration Process
-**Step 1 - Profile Information**:\n- Input: Name, Date of Birth\n- Auto-calculation: Age and AgeGroup assignment based on the following rules:
+\n#### 5.1.2 Multi-Step Registration Process
+**Step 1 - Profile Information**:\n- Input: Child's Name, Date of Birth\n- Input: Parent's Name (mandatory field)
+- Input: Parent's Phone Number (mandatory field, 10-digit validation)
+- Auto-calculation: Age and AgeGroup assignment based on the following rules:
   - Krishna Kids: 0-5 years
   - Krishna Juniors: 6-9 years
   - Krishna Teens: 10-15 years
-\n**Step 2 - Event Selection**:
+
+**Step 2 - Event Selection**:
 - Dynamic competition filtering based on calculated AgeGroup
 - Display competitions with scheduled timings as per the structure defined in section 4.1
 - Multi-event selection with fee calculation (Rs.100 per competition)
 
 **Step 3 - Payment**:
-- Display UPI ID and dynamically generated QR Code\n- Upload payment screenshot
-\n#### 5.1.3 Registration Confirmation
+- Display calculated Total Fee amount prominently
+- Display UPI ID and dynamically generated QR Code\n- Upload payment screenshot (mandatory)\n- **Payment Verification Logic**:
+  - System must extract and verify the payment amount from the uploaded screenshot matches the calculated Total Fee
+  - System must extract and validate the payment timestamp from the screenshot
+  - If amount mismatch or timestamp cannot be verified, display error message:'Payment verification failed. Please ensure the screenshot shows the correct amount (Rs.XXX) and payment timestamp is visible.'
+  - Only proceed to receipt generation if verification passes
+
+#### 5.1.3 Registration Confirmation
 - Generate unique Registration ID
 - Display registration QR code
-- Download Receipt button (triggers window.print() with optimized CSS)
+- **Download Receipt button**: Generates and downloads receipt in PDF format using jsPDF library
+- PDF receipt shall include:
+  - Registration ID
+  - Child's Name and Date of Birth
+  - Parent's Name and Phone Number
+  - Selected competitions with timings
+  - Total Fee paid
+  - Payment timestamp
+  - Registration QR code
 
 ### 5.2 Admin Dashboard Features
 
@@ -104,11 +121,12 @@ The most functional part of the dashboard, offering three distinct viewing and e
 
 **Master Card**:
 - Complete, scrollable ledger of every registration in the system
-- Display participant's name, contact details, selected events, and payment status
+- Display participant's name, parent's name, parent's phone number, contact details, selected events, and payment status
 \n**On-Spot Entry**:
 - Dedicated form for walk-in participants
 - Simplified process for organizers\n- Record 'Cash' or 'Online' payments immediately without requiring file upload
 - Automatic fee calculation based on event count (Rs.100 per competition)
+- Collect child's name, date of birth, parent's name, and parent's phone number
 
 **Payment Verification**:
 - 'View Proof' button to inspect payment screenshots uploaded by public users
@@ -131,8 +149,7 @@ The system shall be pre-populated with competitions as defined in section 4.1, i
 Manages accounts for everyone working behind the scenes:
 
 **Role Assignment**:
-- Create specific accounts for Judges (who score), Hosts (who manage the stage queue), and other Admins
-\n**Credential Management**:
+- Create specific accounts for Judges (who score), Hosts (who manage the stage queue), and other Admins\n\n**Credential Management**:
 - View and edit usernames and passwords for all staff members
 - Ensure no one gets locked out during the busy event day
 
@@ -163,8 +180,7 @@ Controls the 'Front-Door' and financial aspects of the app:
 - Select participant from list
 - Input marks based on event-specific rubrics
 - Matrix view for score consolidation across judges
-
-**Winner Selection Workflow**:
+\n**Winner Selection Workflow**:
 1. **Score Validation Check**: Before allowing winner selection, the system must verify that all assigned judges have submitted scores for all participants in the competition
 2. **Automatic Winner Calculation**: Once all judges have scored, the system automatically calculates and suggests Rank 1, 2, and 3 winners based on aggregated scores
 3. **Manual Winner Override**: Judges retain the ability to manually edit and adjust the winner rankings even after the system has calculated the results
@@ -192,7 +208,14 @@ Controls the 'Front-Door' and financial aspects of the app:
 ### 6.2 Fee Calculation
 - Fixed fee: Rs.100 per competition
 - Total fee = Number of competitions × Rs.100
-\n### 6.3 Result Publishing
+\n### 6.3 Payment Verification
+- Extract payment amount from uploaded screenshot using OCR or image analysis
+- Compare extracted amount with calculated Total Fee
+- Extract payment timestamp from screenshot metadata or visible timestamp
+- Validate timestamp is recent (within reasonable timeframe)
+- Block registration completion if verification fails
+
+### 6.4 Result Publishing
 **Updated Result Publishing Workflow**:
 1. **Judge Scoring Phase**: All assigned judges must submit scores for all participants in a competition
 2. **Score Validation**: System checks if all judges have completed scoring before enabling winner selection
@@ -203,9 +226,10 @@ Controls the 'Front-Door' and financial aspects of the app:
    - Winners (Rank 1, 2, 3)
 7. **Visibility Rule**: Results are visible to Host and Public only after Judge publishes and Host approves for public display
 
-### 6.4 Print Optimization
-- @media print queries for receipt formatting
-- Single-page layout with UI clutter removal
+### 6.5 PDF Receipt Generation
+- Use jsPDF library to generate downloadable PDF receipt
+- Include all registration details, payment information, and QR code
+- Optimize for mobile and desktop download
 \n## 7. Additional Requirements
 
 ### 7.1 Metadata\n- App title: 'Sri Krishna Janmashtami Competitions'\n- Camera permissions in metadata.json for future QR scanning

@@ -55,11 +55,13 @@ export interface Registration {
   totalFee: number;
   paymentMethod: PaymentMethod;
   paymentScreenshot?: string;
+  paymentAmount?: number;
+  paymentTimestamp?: string;
   status: RegistrationStatus;
   createdAt: string;
   calledToStage?: boolean;
-  parentName?: string;
-  whatsappNumber?: string;
+  parentName: string;
+  parentPhone: string;
 }
 
 export interface Score {

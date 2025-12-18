@@ -28,7 +28,7 @@ export default function AdminRegistrations() {
     name: '',
     dateOfBirth: '',
     parentName: '',
-    whatsappNumber: '',
+    parentPhone: '',
     selectedCompetitions: [] as string[],
     paymentMethod: PaymentMethod.Cash
   });
@@ -59,7 +59,7 @@ export default function AdminRegistrations() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.dateOfBirth || formData.selectedCompetitions.length === 0 || !formData.parentName || !formData.whatsappNumber) {
+    if (!formData.name || !formData.dateOfBirth || formData.selectedCompetitions.length === 0 || !formData.parentName || !formData.parentPhone) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
@@ -84,7 +84,7 @@ export default function AdminRegistrations() {
       paymentMethod: formData.paymentMethod,
       status: RegistrationStatus.Confirmed,
       parentName: formData.parentName,
-      whatsappNumber: formData.whatsappNumber
+      parentPhone: formData.parentPhone
     });
 
     toast({
@@ -96,7 +96,7 @@ export default function AdminRegistrations() {
       name: '',
       dateOfBirth: '',
       parentName: '',
-      whatsappNumber: '',
+      parentPhone: '',
       selectedCompetitions: [],
       paymentMethod: PaymentMethod.Cash
     });
@@ -221,12 +221,12 @@ export default function AdminRegistrations() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                    <Label htmlFor="parentPhone">WhatsApp Number</Label>
                     <Input
-                      id="whatsappNumber"
+                      id="parentPhone"
                       type="tel"
-                      value={formData.whatsappNumber}
-                      onChange={(e) => setFormData(prev => ({ ...prev, whatsappNumber: e.target.value }))}
+                      value={formData.parentPhone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, parentPhone: e.target.value }))}
                       className="rounded-[3rem]"
                       placeholder="Enter WhatsApp number"
                       required

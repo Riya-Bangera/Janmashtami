@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useApp } from '@/contexts/AppContext';
 import { calculateAge, getAgeGroup, calculateFee, generateRegistrationId } from '@/lib/utils';
 import { AgeGroup, PaymentMethod, RegistrationStatus } from '@/types/types';
@@ -20,19 +21,34 @@ export default function Register() {
   const [formData, setFormData] = useState({
     name: '',
     dateOfBirth: '',
+    parentName: '',
+    parentPhone: '',
     age: 0,
     ageGroup: AgeGroup.Kids,
     selectedCompetitions: [] as string[],
     totalFee: 0,
-    paymentScreenshot: ''
+    paymentScreenshot: '',
+    paymentAmount: '',
+    paymentTimestamp: ''
   });
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.dateOfBirth) {
+    if (!formData.name || !formData.dateOfBirth || !formData.parentName || !formData.parentPhone) {
       toast({
         title: 'Error',
-        description: 'Please fill in all fields',
+        description: 'Please fill in all fields including parent information',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Validate phone number (10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(formData.parentPhone)) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid 10-digit phone number',
         variant: 'destructive'
       });
       return;
@@ -90,6 +106,58 @@ export default function Register() {
       return;
     }
 
+    if (!formData.paymentAmount || !formData.paymentTimestamp) {
+      toast({
+        title: 'Error',
+        description: 'Please enter payment amount and timestamp',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Verify payment amount matches total fee
+    const enteredAmount = parseFloat(formData.paymentAmount);
+    if (isNaN(enteredAmount) || enteredAmount !== formData.totalFee) {
+      toast({
+        title: 'Payment Verification Failed',
+        description: `Payment amount (₹${enteredAmount}) does not match total fee (₹${formData.totalFee}). Please verify and enter the correct amount.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Validate payment timestamp format and reasonableness
+    const paymentDate = new Date(formData.paymentTimestamp);
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    if (isNaN(paymentDate.getTime())) {
+      toast({
+        title: 'Error',
+        description: 'Invalid payment timestamp format',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (paymentDate > now) {
+      toast({
+        title: 'Payment Verification Failed',
+        description: 'Payment timestamp cannot be in the future',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (paymentDate < oneWeekAgo) {
+      toast({
+        title: 'Payment Verification Failed',
+        description: 'Payment timestamp is too old (more than 7 days ago). Please contact support if this is a valid payment.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     const registrationId = generateRegistrationId();
     
     addRegistration({
@@ -102,12 +170,16 @@ export default function Register() {
       totalFee: formData.totalFee,
       paymentMethod: PaymentMethod.Online,
       paymentScreenshot: formData.paymentScreenshot,
-      status: RegistrationStatus.Confirmed
+      paymentAmount: enteredAmount,
+      paymentTimestamp: formData.paymentTimestamp,
+      status: RegistrationStatus.Confirmed,
+      parentName: formData.parentName,
+      parentPhone: formData.parentPhone
     });
 
     toast({
       title: 'Success',
-      description: 'Registration completed successfully!'
+      description: 'Registration completed successfully! Payment verified.'
     });
 
     navigate(`/registration-confirmation/${registrationId}`);
@@ -170,12 +242,13 @@ export default function Register() {
             <CardContent>
               <form onSubmit={handleProfileSubmit} className="space-y-6">
                 <div>
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">Participant's Full Name</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="rounded-[3rem]"
+                    placeholder="Enter participant's name"
                     required
                   />
                 </div>
@@ -190,6 +263,41 @@ export default function Register() {
                     required
                   />
                 </div>
+                
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Parent/Guardian Information</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="parentName">Parent's Full Name</Label>
+                      <Input
+                        id="parentName"
+                        value={formData.parentName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, parentName: e.target.value }))}
+                        className="rounded-[3rem]"
+                        placeholder="Enter parent's name"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="parentPhone">Parent's Phone Number</Label>
+                      <Input
+                        id="parentPhone"
+                        type="tel"
+                        value={formData.parentPhone}
+                        onChange={(e) => setFormData(prev => ({ ...prev, parentPhone: e.target.value }))}
+                        className="rounded-[3rem]"
+                        placeholder="10-digit phone number"
+                        pattern="[0-9]{10}"
+                        maxLength={10}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Enter 10-digit phone number without spaces or special characters
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <Button type="submit" className="w-full rounded-[3rem]" size="lg">
                   Next
                 </Button>
@@ -244,6 +352,12 @@ export default function Register() {
               <CardTitle>Payment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <Alert>
+                <AlertDescription>
+                  <strong>Important:</strong> After making the payment, please enter the exact amount and timestamp from your payment confirmation to verify your transaction.
+                </AlertDescription>
+              </Alert>
+
               <div className="text-center">
                 <p className="text-2xl font-bold mb-2">Total Fee: ₹{formData.totalFee}</p>
                 <p className="text-sm text-muted-foreground mb-4">UPI ID: {data.settings.upiId}</p>
@@ -251,6 +365,44 @@ export default function Register() {
                   <QRCodeDataUrl text={`upi://pay?pa=${data.settings.upiId}&am=${formData.totalFee}`} width={200} />
                 </div>
               </div>
+
+              <div className="border-t pt-6 space-y-4">
+                <h3 className="text-lg font-semibold">Payment Verification</h3>
+                
+                <div>
+                  <Label htmlFor="paymentAmount">Payment Amount (₹)</Label>
+                  <Input
+                    id="paymentAmount"
+                    type="number"
+                    step="0.01"
+                    value={formData.paymentAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
+                    className="rounded-[3rem]"
+                    placeholder={`Enter ${formData.totalFee}`}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Must match total fee: ₹{formData.totalFee}
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="paymentTimestamp">Payment Date & Time</Label>
+                  <Input
+                    id="paymentTimestamp"
+                    type="datetime-local"
+                    value={formData.paymentTimestamp}
+                    onChange={(e) => setFormData(prev => ({ ...prev, paymentTimestamp: e.target.value }))}
+                    className="rounded-[3rem]"
+                    max={new Date().toISOString().slice(0, 16)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter the exact date and time shown in your payment confirmation
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <Label htmlFor="screenshot">Upload Payment Screenshot</Label>
                 <Input
@@ -259,6 +411,7 @@ export default function Register() {
                   accept="image/*"
                   onChange={handlePaymentScreenshot}
                   className="rounded-[3rem]"
+                  required
                 />
                 {formData.paymentScreenshot && (
                   <div className="mt-4">
@@ -266,6 +419,7 @@ export default function Register() {
                   </div>
                 )}
               </div>
+
               <div className="flex gap-4">
                 <Button variant="outline" onClick={() => setStep(2)} className="flex-1 rounded-[3rem]">
                   Back

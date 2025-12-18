@@ -1,41 +1,41 @@
-# Task: Implement Complete Scoring and Winner Selection Workflow
+# Task: Enhance Online Registration with Payment Verification and PDF Receipt
 
 ## Plan
 
-- [x] Step 1: Analyze current scoring system and data structures
-  - Current system has Score and Result entities
-  - Result has published flag
-  - Need to add validation before publishing
-- [x] Step 2: Update Judge Dashboard with score completion validation
-  - Added function to check if all judges have scored all participants
-  - Show warning/error if scoring incomplete
-  - Disable publish button until all scores submitted
-  - Added judges scoring progress bars
-- [x] Step 3: Separate winner selection from publishing
-  - Allow judges to select winners without publishing (Save as Draft)
-  - Add "Save as Draft" button (doesn't publish)
-  - Add "Publish Results" button (makes public, disabled until scoring complete)
-  - Winners are editable even after saving
-  - Load existing winners when competition changes
-- [x] Step 4: Update Home page with Hall of Fame section
-  - Show only published results
-  - Group by age category
-  - Display: Age Category → Competition Name → Winners
-- [x] Step 5: Test complete workflow
+- [x] Step 1: Add parent information fields to registration form
+  - Added parent's name field
+  - Added parent's phone number field
+  - Updated form validation
+- [x] Step 2: Implement payment verification
+  - Added payment amount input field
+  - Added payment timestamp input field
+  - Verify amount matches total fee
+  - Validate payment timestamp (not future, not older than 7 days)
+- [x] Step 3: Update registration data structure
+  - Added parentName and parentPhone fields (required)
+  - Added paymentAmount and paymentTimestamp fields (optional)
+  - Updated AdminRegistrations to use parentPhone
+- [x] Step 4: Implement PDF receipt generation
+  - Installed jsPDF library
+  - Created PDF receipt template with all details
+  - Replaced window.print() with PDF download
+  - Added parent and payment details to PDF
+- [x] Step 5: Test complete flow
 - [x] Step 6: Run linting and validation
   - All 84 files checked, no errors
 
 ## COMPLETED ✅
 
 All features implemented successfully:
-1. Score completion validation before publishing
-2. Separate save and publish actions
-3. Editable winners even after initial selection
-4. Hall of Fame grouped by age category
-5. Complete workflow: Judge scores → Save winners → Publish → Host sees → Public sees
+1. Parent information fields (name and phone) added to registration
+2. Payment verification with amount and timestamp validation
+3. Amount must match total fee exactly
+4. Timestamp validated (not future, within 7 days)
+5. PDF receipt generation with jsPDF
+6. Receipt includes all details: participant, parent, competitions, payment
 
 ## Notes
-- Must validate ALL judges have scored ALL participants before allowing winner selection
-- Winners should be editable even after initial selection
-- Publishing should be a separate action from winner selection
-- Hall of Fame should show: Age Category → Competition Name → Winners (1st, 2nd, 3rd)
+- Payment amount must match calculated total fee exactly
+- Payment timestamp validated (not future, within 7 days)
+- Parent information is mandatory for all registrations
+- Receipt downloads as PDF file with all verification details
