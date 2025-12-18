@@ -8,7 +8,7 @@ The staff management system has been redesigned for simplicity and efficiency. H
 
 ## 📝 Adding New Staff
 
-### OLD WAY ❌
+### CURRENT WAY ✅
 ```
 ┌─────────────────────────────────┐
 │  Add New Staff Member           │
@@ -16,28 +16,14 @@ The staff management system has been redesigned for simplicity and efficiency. H
 │  Username: [____________]       │
 │  Password: [____________]       │
 │  Role: [Judge ▼]                │
-│  ☐ Competition 1                │
-│  ☐ Competition 2                │
-│  ☐ Competition 3                │
-│  ☐ Competition 4                │
-│  ☐ Competition 5                │
-│  ...                            │
-│  [Add Staff Member]             │
-└─────────────────────────────────┘
-```
-
-### NEW WAY ✅
-```
-┌─────────────────────────────────┐
-│  Add New Staff Member           │
-├─────────────────────────────────┤
-│  Username: [____________]       │
-│  Password: [____________]       │
+│        ├─ Judge                 │
+│        ├─ Host                  │
+│        └─ Admin                 │
 │                                 │
 │  [Add Staff Member]             │
 └─────────────────────────────────┘
 ```
-**Result:** Staff created as Judge by default!
+**Result:** Staff created with selected role!
 
 ---
 
@@ -146,14 +132,12 @@ The staff management system has been redesigned for simplicity and efficiency. H
 ```
 NEW STAFF
     │
-    ├─→ Created as JUDGE (default)
-    │
-    ├─→ Edit to change role:
-    │   ├─→ ADMIN (full access)
+    ├─→ Select role during creation:
     │   ├─→ JUDGE (assigned competitions)
-    │   └─→ HOST (all participants)
+    │   ├─→ HOST (all participants)
+    │   └─→ ADMIN (full access)
     │
-    └─→ Can be edited anytime
+    └─→ Role can be changed anytime via edit
 ```
 
 ---
@@ -163,21 +147,22 @@ NEW STAFF
 ### Create a Judge
 ```
 1. Add Staff → Enter username & password
-2. Assign competitions using age filter
+2. Select "Judge" as role
+3. Assign competitions using age filter
 ✅ Done!
 ```
 
 ### Create a Host
 ```
 1. Add Staff → Enter username & password
-2. Edit → Change role to Host
+2. Select "Host" as role
 ✅ Done!
 ```
 
 ### Create an Admin
 ```
 1. Add Staff → Enter username & password
-2. Edit → Change role to Admin
+2. Select "Admin" as role
 ✅ Done!
 ```
 
@@ -216,20 +201,20 @@ NEW STAFF
 
 | Feature | Benefit |
 |---------|---------|
-| **2-Field Form** | Faster staff creation |
+| **3-Field Form** | Quick staff creation with role selection |
 | **Age Filtering** | Prevents assignment errors |
 | **Role Flexibility** | Easy role changes |
 | **Self-Management** | Admins can edit themselves |
 | **Visual Feedback** | Clear success notifications |
-| **Smart Defaults** | Judge role by default |
+| **Direct Role Assignment** | No need to edit after creation |
 
 ---
 
 ## 🚀 Best Practices
 
-1. **Add staff quickly** - Just username and password
-2. **Assign roles later** - Edit when needed
-3. **Use age filter** - Prevents mistakes
+1. **Select correct role** - Choose Judge, Host, or Admin during creation
+2. **Add staff quickly** - Username, password, and role
+3. **Use age filter** - Prevents mistakes when assigning competitions
 4. **Check assignments** - View badges on cards
 5. **Update passwords** - Edit anytime
 6. **Create multiple admins** - For backup access
@@ -238,7 +223,7 @@ NEW STAFF
 
 ## ⚡ Power User Tips
 
-- **Bulk Creation**: Add multiple staff quickly with minimal fields
+- **Direct Role Assignment**: Select the correct role during creation to save time
 - **Role Changes**: Switch roles without recreating accounts
 - **Age Filter**: Always use age category first for accuracy
 - **Badge Removal**: Click X to quickly unassign competitions

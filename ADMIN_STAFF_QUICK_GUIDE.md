@@ -2,11 +2,15 @@
 
 ## 🚀 Quick Start
 
-### Adding New Staff (Simplified!)
+### Adding New Staff
 1. Click **"Add Staff"** button (orange button, top right)
-2. Enter **Username** and **Password** only
-3. Click **"Add Staff Member"**
-4. ✅ Done! Staff is created as Judge by default
+2. Enter **Username** and **Password**
+3. Select **Role** from dropdown:
+   - **Judge** - Can score assigned competitions
+   - **Host** - Can manage all participants
+   - **Admin** - Full system access
+4. Click **"Add Staff Member"**
+5. ✅ Done! Staff is created with selected role
 
 ### Changing Staff Role
 1. Click **edit icon** (blue pencil) on staff card
@@ -48,7 +52,7 @@
 
 ## 💡 Tips
 
-- **Default Role**: All new staff start as Judges
+- **Role Selection**: Choose the correct role when adding staff
 - **Role Changes**: Can be changed anytime through edit
 - **Judge Assignments**: Use age category filter to avoid mistakes
 - **Host Access**: Hosts don't need competition assignments
@@ -59,20 +63,19 @@
 
 ### Creating a Judge
 1. Add staff (username + password)
-2. Assign competitions using age category filter
-3. Done!
+2. Select "Judge" as role
+3. Assign competitions using age category filter
+4. Done!
 
 ### Creating a Host
 1. Add staff (username + password)
-2. Edit the staff member
-3. Change role to "Host"
-4. Done!
+2. Select "Host" as role
+3. Done!
 
 ### Creating Another Admin
 1. Add staff (username + password)
-2. Edit the staff member
-3. Change role to "Admin"
-4. Done!
+2. Select "Admin" as role
+3. Done!
 
 ### Updating Your Password
 1. Find your own card

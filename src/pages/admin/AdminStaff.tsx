@@ -148,7 +148,8 @@ export default function AdminStaff() {
 
   const [formData, setFormData] = useState({
     username: '',
-    password: ''
+    password: '',
+    role: UserRole.Judge
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -183,8 +184,8 @@ export default function AdminStaff() {
     addUser({
       username: formData.username,
       password: formData.password,
-      role: UserRole.Judge,
-      assignedCompetitions: []
+      role: formData.role,
+      assignedCompetitions: formData.role === UserRole.Judge ? [] : undefined
     });
 
     toast({
@@ -194,7 +195,8 @@ export default function AdminStaff() {
 
     setFormData({
       username: '',
-      password: ''
+      password: '',
+      role: UserRole.Judge
     });
     setDialogOpen(false);
   };
@@ -302,6 +304,22 @@ export default function AdminStaff() {
                     className="rounded-[3rem]"
                     required
                   />
+                </div>
+                <div>
+                  <Label>Role</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
+                  >
+                    <SelectTrigger className="rounded-[3rem]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={UserRole.Judge}>Judge</SelectItem>
+                      <SelectItem value={UserRole.Host}>Host</SelectItem>
+                      <SelectItem value={UserRole.Admin}>Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button type="submit" className="w-full rounded-[3rem]">
                   Add Staff Member
