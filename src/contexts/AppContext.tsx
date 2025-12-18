@@ -106,11 +106,12 @@ interface AppContextType {
   resetData: () => void;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(initialData);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -122,6 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.error('Failed to parse stored data:', error);
       }
     }
+    setIsInitialized(true);
   }, []);
 
   useEffect(() => {
@@ -273,6 +275,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setData(initialData);
     setCurrentUser(null);
   };
+
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <AppContext.Provider
