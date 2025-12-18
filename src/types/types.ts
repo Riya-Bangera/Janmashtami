@@ -60,6 +60,8 @@ export interface Registration {
   status: RegistrationStatus;
   createdAt: string;
   calledToStage?: boolean;
+  parentName?: string;
+  whatsappNumber?: string;
 }
 
 export interface Score {

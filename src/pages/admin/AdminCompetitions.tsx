@@ -16,6 +16,8 @@ export default function AdminCompetitions() {
   const { currentUser, data, addCompetition, updateCompetition, deleteCompetition } = useApp();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedCompetition, setSelectedCompetition] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -111,6 +113,60 @@ export default function AdminCompetitions() {
       });
     }
   };
+
+  const handleEdit = (competitionId: string) => {
+    const comp = data.competitions.find(c => c.id === competitionId);
+    if (comp) {
+      setSelectedCompetition(competitionId);
+      setFormData({
+        name: comp.name,
+        time: comp.time || '',
+        fee: comp.fee,
+        additionalFee: comp.additionalFee,
+        ageGroups: comp.ageGroups,
+        rubrics: comp.rubrics
+      });
+      setEditDialogOpen(true);
+    }
+  };
+
+  const handleUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedCompetition) return;
+
+    if (!formData.name || formData.ageGroups.length === 0 || formData.rubrics.some(r => !r.name)) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    updateCompetition(selectedCompetition, {
+      name: formData.name,
+      time: formData.time,
+      fee: formData.fee,
+      additionalFee: formData.additionalFee,
+      ageGroups: formData.ageGroups,
+      rubrics: formData.rubrics
+    });
+
+    toast({
+      title: 'Success',
+      description: 'Competition updated successfully'
+    });
+
+    setEditDialogOpen(false);
+    setSelectedCompetition(null);
+  };
+
+  // Group competitions by age group
+  const competitionsByAgeGroup = Object.values(AgeGroup).map(ageGroup => ({
+    ageGroup,
+    competitions: data.competitions.filter(comp => comp.ageGroups.includes(ageGroup))
+  }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -254,48 +310,189 @@ export default function AdminCompetitions() {
           </Dialog>
         </div>
 
-        <Card className="rounded-[3rem]">
-          <CardHeader>
-            <CardTitle>All Competitions ({data.competitions.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Age Groups</TableHead>
-                    <TableHead>Fee</TableHead>
-                    <TableHead>Rubrics</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.competitions.map((comp) => (
-                    <TableRow key={comp.id}>
-                      <TableCell className="font-semibold">{comp.name}</TableCell>
-                      <TableCell>{comp.time}</TableCell>
-                      <TableCell>{comp.ageGroups.join(', ')}</TableCell>
-                      <TableCell>₹{comp.fee} / ₹{comp.additionalFee}</TableCell>
-                      <TableCell>{comp.rubrics.length} rubrics</TableCell>
-                      <TableCell>
+        <div className="space-y-6">
+          {competitionsByAgeGroup.map(({ ageGroup, competitions }) => (
+            competitions.length > 0 && (
+              <Card key={ageGroup} className="rounded-[3rem]">
+                <CardHeader>
+                  <CardTitle className="text-2xl">{ageGroup} Competitions ({competitions.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Fee</TableHead>
+                          <TableHead>Rubrics</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {competitions.map((comp) => (
+                          <TableRow key={comp.id}>
+                            <TableCell className="font-semibold">{comp.name}</TableCell>
+                            <TableCell>{comp.time}</TableCell>
+                            <TableCell>₹{comp.fee} / ₹{comp.additionalFee}</TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {comp.rubrics.map((r, idx) => (
+                                  <div key={idx}>{r.name} ({r.maxScore})</div>
+                                ))}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEdit(comp.id)}
+                                  className="rounded-[3rem]"
+                                >
+                                  <i className="fas fa-edit" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDelete(comp.id)}
+                                  className="rounded-[3rem]"
+                                >
+                                  <i className="fas fa-trash" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          ))}
+        </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Competition</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdate} className="space-y-6">
+              <div>
+                <Label htmlFor="edit-name">Competition Name</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="rounded-[3rem]"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-time">Time</Label>
+                <Input
+                  id="edit-time"
+                  value={formData.time}
+                  onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
+                  className="rounded-[3rem]"
+                  placeholder="e.g., 10:00 AM"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-fee">Base Fee (₹)</Label>
+                  <Input
+                    id="edit-fee"
+                    type="number"
+                    value={formData.fee}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fee: Number(e.target.value) }))}
+                    className="rounded-[3rem]"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-additionalFee">Additional Fee (₹)</Label>
+                  <Input
+                    id="edit-additionalFee"
+                    type="number"
+                    value={formData.additionalFee}
+                    onChange={(e) => setFormData(prev => ({ ...prev, additionalFee: Number(e.target.value) }))}
+                    className="rounded-[3rem]"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Age Groups</Label>
+                <div className="space-y-2 mt-2">
+                  {Object.values(AgeGroup).map((group) => (
+                    <div key={group} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`edit-age-${group}`}
+                        checked={formData.ageGroups.includes(group)}
+                        onCheckedChange={() => handleAgeGroupToggle(group)}
+                      />
+                      <Label htmlFor={`edit-age-${group}`} className="cursor-pointer">
+                        {group}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <Label>Scoring Rubrics</Label>
+                  <Button type="button" size="sm" onClick={addRubric} className="rounded-[3rem]">
+                    <i className="fas fa-plus mr-2" />
+                    Add Rubric
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {formData.rubrics.map((rubric, index) => (
+                    <div key={index} className="flex gap-2 items-end">
+                      <div className="flex-1">
+                        <Label>Rubric Name</Label>
+                        <Input
+                          value={rubric.name}
+                          onChange={(e) => handleRubricChange(index, 'name', e.target.value)}
+                          className="rounded-[3rem]"
+                          placeholder="e.g., Voice Quality"
+                          required
+                        />
+                      </div>
+                      <div className="w-32">
+                        <Label>Max Score</Label>
+                        <Input
+                          type="number"
+                          value={rubric.maxScore}
+                          onChange={(e) => handleRubricChange(index, 'maxScore', Number(e.target.value))}
+                          className="rounded-[3rem]"
+                          required
+                        />
+                      </div>
+                      {formData.rubrics.length > 1 && (
                         <Button
+                          type="button"
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleDelete(comp.id)}
+                          onClick={() => removeRubric(index)}
                           className="rounded-[3rem]"
                         >
                           <i className="fas fa-trash" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
+                      )}
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              </div>
+              <Button type="submit" className="w-full rounded-[3rem]">
+                Update Competition
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

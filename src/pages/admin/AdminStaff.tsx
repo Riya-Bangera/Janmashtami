@@ -135,23 +135,17 @@ export default function AdminStaff() {
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={() => navigate('/admin/dashboard')}>
               <i className="fas fa-arrow-left mr-2" />
             </Button>
-            <h1 className="text-2xl font-bold">Staff Management</h1>
+            <h1 className="text-3xl font-bold uppercase tracking-wide">Staff Management</h1>
           </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex justify-end mb-6">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-[3rem]">
-                <i className="fas fa-plus mr-2" />
-                Add Staff Member
+              <Button className="rounded-[3rem] bg-[#ffa500] hover:bg-[#ff8c00] text-white px-6 py-6 text-base font-bold uppercase">
+                Add Staff
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -221,56 +215,134 @@ export default function AdminStaff() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
 
-        <Card className="rounded-[3rem]">
-          <CardHeader>
-            <CardTitle>Staff Members ({staff.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Username</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Assigned Competitions</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {staff.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-semibold">{user.username}</TableCell>
-                      <TableCell className="capitalize">{user.role}</TableCell>
-                      <TableCell className="max-w-xs truncate">{getCompetitionNames(user.assignedCompetitions)}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(user.id)}
-                            className="rounded-[3rem]"
-                          >
-                            <i className="fas fa-edit" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(user.id)}
-                            className="rounded-[3rem]"
-                          >
-                            <i className="fas fa-trash" />
-                          </Button>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {staff.map((user) => (
+            <Card key={user.id} className="rounded-[3rem] border-2 bg-muted/30 hover:shadow-lg transition-shadow">
+              <CardContent className="p-8">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold uppercase mb-2">{user.username}</h2>
+                    <div className="inline-block bg-[#ffa500] text-white px-4 py-1 rounded-full text-sm font-bold uppercase">
+                      {user.role}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEdit(user.id)}
+                      className="rounded-full w-10 h-10 p-0 text-blue-600 hover:bg-blue-50"
+                    >
+                      <i className="fas fa-edit text-lg" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(user.id)}
+                      className="rounded-full w-10 h-10 p-0 text-red-600 hover:bg-red-50"
+                    >
+                      <i className="fas fa-trash text-lg" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-muted-foreground mb-4">
+                  <span className="font-semibold">PWD:</span> {user.password}
+                </div>
+
+                {user.role === UserRole.Judge && (
+                  <div className="mt-6 pt-6 border-t">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase mb-4">
+                      Assign Competitions
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Select
+                        value={user.assignedCompetitions?.[0] || ''}
+                        onValueChange={(value) => {
+                          const currentAssignments = user.assignedCompetitions || [];
+                          if (value && !currentAssignments.includes(value)) {
+                            updateUser(user.id, {
+                              assignedCompetitions: [...currentAssignments, value]
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="rounded-[3rem] border-2 border-black">
+                          <SelectValue placeholder="-- CATEGORY --" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[...new Set(data.competitions.flatMap(c => c.ageGroups))].map((ageGroup) => (
+                            <SelectItem key={ageGroup} value={ageGroup}>
+                              {ageGroup}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select
+                        value=""
+                        onValueChange={(value) => {
+                          const currentAssignments = user.assignedCompetitions || [];
+                          if (value && !currentAssignments.includes(value)) {
+                            updateUser(user.id, {
+                              assignedCompetitions: [...currentAssignments, value]
+                            });
+                            toast({
+                              title: 'Success',
+                              description: 'Competition assigned successfully'
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="rounded-[3rem] border-2">
+                          <SelectValue placeholder="-- EVENT --" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {data.competitions.map((comp) => (
+                            <SelectItem key={comp.id} value={comp.id}>
+                              {comp.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {user.assignedCompetitions && user.assignedCompetitions.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground">Assigned Events:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {user.assignedCompetitions.map((compId) => {
+                            const comp = data.competitions.find(c => c.id === compId);
+                            return comp ? (
+                              <div key={compId} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2">
+                                {comp.name}
+                                <button
+                                  onClick={() => {
+                                    updateUser(user.id, {
+                                      assignedCompetitions: user.assignedCompetitions?.filter(id => id !== compId)
+                                    });
+                                  }}
+                                  className="hover:text-destructive"
+                                >
+                                  <i className="fas fa-times" />
+                                </button>
+                              </div>
+                            ) : null;
+                          })}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
+        {/* Edit Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>

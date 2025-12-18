@@ -27,6 +27,8 @@ export default function AdminRegistrations() {
   const [formData, setFormData] = useState({
     name: '',
     dateOfBirth: '',
+    parentName: '',
+    whatsappNumber: '',
     selectedCompetitions: [] as string[],
     paymentMethod: PaymentMethod.Cash
   });
@@ -57,7 +59,7 @@ export default function AdminRegistrations() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.dateOfBirth || formData.selectedCompetitions.length === 0) {
+    if (!formData.name || !formData.dateOfBirth || formData.selectedCompetitions.length === 0 || !formData.parentName || !formData.whatsappNumber) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
@@ -80,7 +82,9 @@ export default function AdminRegistrations() {
       competitions: formData.selectedCompetitions,
       totalFee,
       paymentMethod: formData.paymentMethod,
-      status: RegistrationStatus.Confirmed
+      status: RegistrationStatus.Confirmed,
+      parentName: formData.parentName,
+      whatsappNumber: formData.whatsappNumber
     });
 
     toast({
@@ -91,6 +95,8 @@ export default function AdminRegistrations() {
     setFormData({
       name: '',
       dateOfBirth: '',
+      parentName: '',
+      whatsappNumber: '',
       selectedCompetitions: [],
       paymentMethod: PaymentMethod.Cash
     });
@@ -176,12 +182,13 @@ export default function AdminRegistrations() {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Child's Full Name</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       className="rounded-[3rem]"
+                      placeholder="Enter child's name"
                       required
                     />
                   </div>
@@ -195,24 +202,65 @@ export default function AdminRegistrations() {
                       className="rounded-[3rem]"
                       required
                     />
+                    {formData.dateOfBirth && (
+                      <div className="mt-2 p-3 bg-muted rounded-[3rem] text-sm">
+                        <p><strong>Age:</strong> {calculateAge(formData.dateOfBirth)} years</p>
+                        <p><strong>Age Group:</strong> {getAgeGroup(calculateAge(formData.dateOfBirth))}</p>
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <Label>Select Competitions</Label>
+                    <Label htmlFor="parentName">Parent's Name</Label>
+                    <Input
+                      id="parentName"
+                      value={formData.parentName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, parentName: e.target.value }))}
+                      className="rounded-[3rem]"
+                      placeholder="Enter parent's name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                    <Input
+                      id="whatsappNumber"
+                      type="tel"
+                      value={formData.whatsappNumber}
+                      onChange={(e) => setFormData(prev => ({ ...prev, whatsappNumber: e.target.value }))}
+                      className="rounded-[3rem]"
+                      placeholder="Enter WhatsApp number"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Select Competitions (Based on Age Group)</Label>
                     <div className="space-y-2 mt-2">
-                      {data.competitions.map((comp) => (
-                        <div key={comp.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`comp-${comp.id}`}
-                            checked={formData.selectedCompetitions.includes(comp.id)}
-                            onCheckedChange={() => handleCompetitionToggle(comp.id)}
-                          />
-                          <Label htmlFor={`comp-${comp.id}`} className="cursor-pointer">
-                            {comp.name}
-                          </Label>
-                        </div>
-                      ))}
+                      {formData.dateOfBirth && data.competitions
+                        .filter(comp => comp.ageGroups.includes(getAgeGroup(calculateAge(formData.dateOfBirth))))
+                        .map((comp) => (
+                          <div key={comp.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`comp-${comp.id}`}
+                              checked={formData.selectedCompetitions.includes(comp.id)}
+                              onCheckedChange={() => handleCompetitionToggle(comp.id)}
+                            />
+                            <Label htmlFor={`comp-${comp.id}`} className="cursor-pointer">
+                              {comp.name} - ₹{comp.fee}
+                            </Label>
+                          </div>
+                        ))}
+                      {!formData.dateOfBirth && (
+                        <p className="text-sm text-muted-foreground">Please enter date of birth first</p>
+                      )}
                     </div>
                   </div>
+                  {formData.selectedCompetitions.length > 0 && (
+                    <div className="p-4 bg-primary/10 rounded-[3rem]">
+                      <p className="text-lg font-bold">
+                        Total Fee: ₹{calculateFee(data.competitions, formData.selectedCompetitions)}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <Label>Payment Method</Label>
                     <Select
@@ -223,8 +271,8 @@ export default function AdminRegistrations() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={PaymentMethod.Cash}>Cash</SelectItem>
-                        <SelectItem value={PaymentMethod.Online}>Online</SelectItem>
+                        <SelectItem value={PaymentMethod.Cash}>Paid Cash</SelectItem>
+                        <SelectItem value={PaymentMethod.Online}>Paid Online</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
