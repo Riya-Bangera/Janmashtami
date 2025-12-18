@@ -27,9 +27,7 @@ export default function Register() {
     ageGroup: AgeGroup.Kids,
     selectedCompetitions: [] as string[],
     totalFee: 0,
-    paymentScreenshot: '',
-    paymentAmount: '',
-    paymentTimestamp: ''
+    paymentScreenshot: ''
   });
 
   const handleProfileSubmit = (e: React.FormEvent) => {
@@ -106,58 +104,6 @@ export default function Register() {
       return;
     }
 
-    if (!formData.paymentAmount || !formData.paymentTimestamp) {
-      toast({
-        title: 'Error',
-        description: 'Please enter payment amount and timestamp',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    // Verify payment amount matches total fee
-    const enteredAmount = parseFloat(formData.paymentAmount);
-    if (isNaN(enteredAmount) || enteredAmount !== formData.totalFee) {
-      toast({
-        title: 'Payment Verification Failed',
-        description: `Payment amount (₹${enteredAmount}) does not match total fee (₹${formData.totalFee}). Please verify and enter the correct amount.`,
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    // Validate payment timestamp format and reasonableness
-    const paymentDate = new Date(formData.paymentTimestamp);
-    const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    if (isNaN(paymentDate.getTime())) {
-      toast({
-        title: 'Error',
-        description: 'Invalid payment timestamp format',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (paymentDate > now) {
-      toast({
-        title: 'Payment Verification Failed',
-        description: 'Payment timestamp cannot be in the future',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (paymentDate < oneWeekAgo) {
-      toast({
-        title: 'Payment Verification Failed',
-        description: 'Payment timestamp is too old (more than 7 days ago). Please contact support if this is a valid payment.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
     const registrationId = generateRegistrationId();
     
     addRegistration({
@@ -170,16 +116,14 @@ export default function Register() {
       totalFee: formData.totalFee,
       paymentMethod: PaymentMethod.Online,
       paymentScreenshot: formData.paymentScreenshot,
-      paymentAmount: enteredAmount,
-      paymentTimestamp: formData.paymentTimestamp,
-      status: RegistrationStatus.Confirmed,
+      status: RegistrationStatus.Pending,
       parentName: formData.parentName,
       parentPhone: formData.parentPhone
     });
 
     toast({
-      title: 'Success',
-      description: 'Registration completed successfully! Payment verified.'
+      title: 'Registration Submitted',
+      description: 'Your registration is pending admin verification. You will be notified once approved.'
     });
 
     navigate(`/registration-confirmation/${registrationId}`);
@@ -354,7 +298,7 @@ export default function Register() {
             <CardContent className="space-y-6">
               <Alert>
                 <AlertDescription>
-                  <strong>Important:</strong> After making the payment, please enter the exact amount and timestamp from your payment confirmation to verify your transaction.
+                  <strong>Important:</strong> After making the payment, upload a clear screenshot showing the payment amount, date, time, and transaction status. Our admin team will verify your payment and approve your registration.
                 </AlertDescription>
               </Alert>
 
@@ -364,68 +308,53 @@ export default function Register() {
                 <div className="flex justify-center mb-4">
                   <QRCodeDataUrl text={`upi://pay?pa=${data.settings.upiId}&am=${formData.totalFee}`} width={200} />
                 </div>
+                <p className="text-sm text-muted-foreground">
+                  Scan QR code or use UPI ID to pay ₹{formData.totalFee}
+                </p>
               </div>
 
-              <div className="border-t pt-6 space-y-4">
-                <h3 className="text-lg font-semibold">Payment Verification</h3>
-                
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Upload Payment Proof</h3>
                 <div>
-                  <Label htmlFor="paymentAmount">Payment Amount (₹)</Label>
+                  <Label htmlFor="screenshot">Payment Screenshot</Label>
                   <Input
-                    id="paymentAmount"
-                    type="number"
-                    step="0.01"
-                    value={formData.paymentAmount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, paymentAmount: e.target.value }))}
+                    id="screenshot"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePaymentScreenshot}
                     className="rounded-[3rem]"
-                    placeholder={`Enter ${formData.totalFee}`}
                     required
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Must match total fee: ₹{formData.totalFee}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Upload a clear screenshot showing:
                   </p>
-                </div>
-
-                <div>
-                  <Label htmlFor="paymentTimestamp">Payment Date & Time</Label>
-                  <Input
-                    id="paymentTimestamp"
-                    type="datetime-local"
-                    value={formData.paymentTimestamp}
-                    onChange={(e) => setFormData(prev => ({ ...prev, paymentTimestamp: e.target.value }))}
-                    className="rounded-[3rem]"
-                    max={new Date().toISOString().slice(0, 16)}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter the exact date and time shown in your payment confirmation
-                  </p>
+                  <ul className="text-xs text-muted-foreground mt-1 ml-4 list-disc">
+                    <li>Payment amount (₹{formData.totalFee})</li>
+                    <li>Date and time of payment</li>
+                    <li>Transaction status (Success/Completed)</li>
+                    <li>Transaction ID or reference number</li>
+                  </ul>
+                  {formData.paymentScreenshot && (
+                    <div className="mt-4">
+                      <p className="text-sm font-semibold mb-2">Preview:</p>
+                      <img src={formData.paymentScreenshot} alt="Payment" className="max-w-xs mx-auto rounded-[3rem] border-2" />
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="screenshot">Upload Payment Screenshot</Label>
-                <Input
-                  id="screenshot"
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePaymentScreenshot}
-                  className="rounded-[3rem]"
-                  required
-                />
-                {formData.paymentScreenshot && (
-                  <div className="mt-4">
-                    <img src={formData.paymentScreenshot} alt="Payment" className="max-w-xs mx-auto rounded-[3rem]" />
-                  </div>
-                )}
-              </div>
+              <Alert className="bg-primary/10">
+                <AlertDescription>
+                  <strong>Note:</strong> Your registration will be in "Pending" status until our admin team verifies your payment screenshot. You will receive confirmation once approved.
+                </AlertDescription>
+              </Alert>
 
               <div className="flex gap-4">
                 <Button variant="outline" onClick={() => setStep(2)} className="flex-1 rounded-[3rem]">
                   Back
                 </Button>
                 <Button onClick={handleFinalSubmit} className="flex-1 rounded-[3rem]">
-                  Complete Registration
+                  Submit Registration
                 </Button>
               </div>
             </CardContent>

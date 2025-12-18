@@ -1,11 +1,14 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useApp } from '@/contexts/AppContext';
 import QRCodeDataUrl from '@/components/ui/qrcodedataurl';
 import { formatDate } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
+import { RegistrationStatus } from '@/types/types';
 
 export default function RegistrationConfirmation() {
   const { registrationId } = useParams<{ registrationId: string }>();
@@ -33,6 +36,8 @@ export default function RegistrationConfirmation() {
   }
 
   const competitions = data.competitions.filter(c => registration.competitions.includes(c.id));
+  const isPending = registration.status === RegistrationStatus.Pending;
+  const isConfirmed = registration.status === RegistrationStatus.Confirmed;
 
   const handleDownloadPDF = () => {
     try {
@@ -207,10 +212,29 @@ export default function RegistrationConfirmation() {
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-3xl">
         <div className="text-center mb-8">
-          <i className="fas fa-check-circle text-6xl text-primary mb-4" />
-          <h1 className="text-4xl font-bold mb-2">Registration Successful!</h1>
-          <p className="text-muted-foreground">Your registration has been confirmed and payment verified</p>
+          {isPending && (
+            <>
+              <i className="fas fa-clock text-6xl text-yellow-500 mb-4" />
+              <h1 className="text-4xl font-bold mb-2">Registration Submitted!</h1>
+              <p className="text-muted-foreground">Pending admin verification</p>
+            </>
+          )}
+          {isConfirmed && (
+            <>
+              <i className="fas fa-check-circle text-6xl text-primary mb-4" />
+              <h1 className="text-4xl font-bold mb-2">Registration Confirmed!</h1>
+              <p className="text-muted-foreground">Your payment has been verified</p>
+            </>
+          )}
         </div>
+
+        {isPending && (
+          <Alert className="mb-6 rounded-[3rem]">
+            <AlertDescription>
+              <strong>Payment Verification Pending:</strong> Our admin team is reviewing your payment screenshot. You will be notified once your registration is approved. Please check back later or contact us if you have questions.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Card className="rounded-[3rem]">
           <CardHeader className="text-center">
@@ -218,7 +242,12 @@ export default function RegistrationConfirmation() {
               <i className="fas fa-spa text-5xl text-primary" />
             </div>
             <CardTitle className="text-3xl">Sri Krishna Janmashtami</CardTitle>
-            <p className="text-xl">Competition Registration Receipt</p>
+            <p className="text-xl">Competition Registration</p>
+            <div className="mt-4">
+              <Badge variant={isPending ? 'secondary' : 'default'} className="text-lg px-4 py-1">
+                {registration.status}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center">
@@ -285,20 +314,14 @@ export default function RegistrationConfirmation() {
                   <span className="text-muted-foreground">Payment Method</span>
                   <span className="font-semibold">Online (UPI)</span>
                 </div>
-                {registration.paymentAmount && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Amount Paid</span>
-                    <span className="font-semibold">₹{registration.paymentAmount}</span>
-                  </div>
-                )}
-                {registration.paymentTimestamp && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Payment Time</span>
-                    <span className="font-semibold">{formatDate(registration.paymentTimestamp)}</span>
-                  </div>
-                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge variant={isPending ? 'secondary' : 'default'}>
+                    {isPending ? 'Pending Verification' : 'Verified'}
+                  </Badge>
+                </div>
                 <div className="flex justify-between items-center text-xl font-bold pt-4 border-t">
-                  <span>Total Fee Paid</span>
+                  <span>Total Fee</span>
                   <span className="text-primary">₹{registration.totalFee}</span>
                 </div>
               </div>
@@ -306,16 +329,29 @@ export default function RegistrationConfirmation() {
 
             <div className="border-t pt-6 text-center text-sm text-muted-foreground">
               <p>Registration Date: {formatDate(registration.createdAt)}</p>
-              <p className="mt-2">Please bring this receipt on the day of the event</p>
+              {isConfirmed && (
+                <p className="mt-2">Please bring this receipt on the day of the event</p>
+              )}
+              {isPending && (
+                <p className="mt-2">Receipt will be available after admin approval</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
         <div className="flex gap-4 mt-8">
-          <Button onClick={handleDownloadPDF} className="flex-1 rounded-[3rem]" size="lg">
-            <i className="fas fa-download mr-2" />
-            Download PDF Receipt
-          </Button>
+          {isConfirmed && (
+            <Button onClick={handleDownloadPDF} className="flex-1 rounded-[3rem]" size="lg">
+              <i className="fas fa-download mr-2" />
+              Download PDF Receipt
+            </Button>
+          )}
+          {isPending && (
+            <Button disabled className="flex-1 rounded-[3rem]" size="lg">
+              <i className="fas fa-clock mr-2" />
+              Receipt Available After Approval
+            </Button>
+          )}
           <Button onClick={() => navigate('/')} variant="outline" className="flex-1 rounded-[3rem]" size="lg">
             Back to Home
           </Button>
