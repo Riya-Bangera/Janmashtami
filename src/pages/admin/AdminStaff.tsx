@@ -9,8 +9,134 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useApp } from '@/contexts/AppContext';
-import { UserRole } from '@/types/types';
+import { UserRole, AgeGroup } from '@/types/types';
 import { useToast } from '@/hooks/use-toast';
+
+// Staff Card Component with Age Group Filtering
+function StaffCard({ user, onEdit, onDelete, updateUser, competitions, toast }: any) {
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | ''>('');
+
+  const filteredCompetitions = selectedAgeGroup
+    ? competitions.filter((comp: any) => comp.ageGroups.includes(selectedAgeGroup))
+    : [];
+
+  return (
+    <Card className="rounded-[3rem] border-2 bg-muted/30 hover:shadow-lg transition-shadow">
+      <CardContent className="p-8">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h2 className="text-2xl font-bold uppercase mb-2">{user.username}</h2>
+            <div className="inline-block bg-[#ffa500] text-white px-4 py-1 rounded-full text-sm font-bold uppercase">
+              {user.role}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onEdit(user.id)}
+              className="rounded-full w-10 h-10 p-0 text-blue-600 hover:bg-blue-50"
+            >
+              <i className="fas fa-edit text-lg" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onDelete(user.id)}
+              className="rounded-full w-10 h-10 p-0 text-red-600 hover:bg-red-50"
+            >
+              <i className="fas fa-trash text-lg" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="text-sm text-muted-foreground mb-4">
+          <span className="font-semibold">PWD:</span> {user.password}
+        </div>
+
+        {user.role === UserRole.Judge && (
+          <div className="mt-6 pt-6 border-t">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase mb-4">
+              Assign Competitions
+            </h3>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <Select
+                value={selectedAgeGroup}
+                onValueChange={(value) => setSelectedAgeGroup(value as AgeGroup)}
+              >
+                <SelectTrigger className="rounded-[3rem] border-2 border-black">
+                  <SelectValue placeholder="-- CATEGORY --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(AgeGroup).map((ageGroup) => (
+                    <SelectItem key={ageGroup} value={ageGroup}>
+                      {ageGroup}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  const currentAssignments = user.assignedCompetitions || [];
+                  if (value && !currentAssignments.includes(value)) {
+                    updateUser(user.id, {
+                      assignedCompetitions: [...currentAssignments, value]
+                    });
+                    toast({
+                      title: 'Success',
+                      description: 'Competition assigned successfully'
+                    });
+                    setSelectedAgeGroup('');
+                  }
+                }}
+                disabled={!selectedAgeGroup}
+              >
+                <SelectTrigger className="rounded-[3rem] border-2">
+                  <SelectValue placeholder="-- EVENT --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredCompetitions.map((comp: any) => (
+                    <SelectItem key={comp.id} value={comp.id}>
+                      {comp.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {user.assignedCompetitions && user.assignedCompetitions.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">Assigned Events:</p>
+                <div className="flex flex-wrap gap-2">
+                  {user.assignedCompetitions.map((compId: string) => {
+                    const comp = competitions.find((c: any) => c.id === compId);
+                    return comp ? (
+                      <div key={compId} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2">
+                        {comp.name}
+                        <button
+                          onClick={() => {
+                            updateUser(user.id, {
+                              assignedCompetitions: user.assignedCompetitions?.filter((id: string) => id !== compId)
+                            });
+                          }}
+                          className="hover:text-destructive"
+                        >
+                          <i className="fas fa-times" />
+                        </button>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function AdminStaff() {
   const navigate = useNavigate();
@@ -21,6 +147,11 @@ export default function AdminStaff() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
+
+  const [editFormData, setEditFormData] = useState({
     username: '',
     password: '',
     role: UserRole.Judge,
@@ -35,7 +166,7 @@ export default function AdminStaff() {
 
   if (!currentUser) return null;
 
-  const staff = data.users.filter(u => u.role === UserRole.Judge || u.role === UserRole.Host);
+  const staff = data.users.filter(u => u.role === UserRole.Judge || u.role === UserRole.Host || u.role === UserRole.Admin);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +183,8 @@ export default function AdminStaff() {
     addUser({
       username: formData.username,
       password: formData.password,
-      role: formData.role,
-      assignedCompetitions: formData.role === UserRole.Judge ? formData.assignedCompetitions : undefined
+      role: UserRole.Judge,
+      assignedCompetitions: []
     });
 
     toast({
@@ -63,9 +194,7 @@ export default function AdminStaff() {
 
     setFormData({
       username: '',
-      password: '',
-      role: UserRole.Judge,
-      assignedCompetitions: []
+      password: ''
     });
     setDialogOpen(false);
   };
@@ -74,7 +203,7 @@ export default function AdminStaff() {
     const user = data.users.find(u => u.id === userId);
     if (user) {
       setSelectedUser(userId);
-      setFormData({
+      setEditFormData({
         username: user.username,
         password: user.password,
         role: user.role,
@@ -90,10 +219,10 @@ export default function AdminStaff() {
     if (!selectedUser) return;
 
     updateUser(selectedUser, {
-      username: formData.username,
-      password: formData.password,
-      role: formData.role,
-      assignedCompetitions: formData.role === UserRole.Judge ? formData.assignedCompetitions : undefined
+      username: editFormData.username,
+      password: editFormData.password,
+      role: editFormData.role,
+      assignedCompetitions: editFormData.role === UserRole.Judge ? editFormData.assignedCompetitions : undefined
     });
 
     toast({
@@ -116,7 +245,7 @@ export default function AdminStaff() {
   };
 
   const handleCompetitionToggle = (competitionId: string) => {
-    setFormData(prev => {
+    setEditFormData(prev => {
       const assigned = prev.assignedCompetitions.includes(competitionId)
         ? prev.assignedCompetitions.filter(id => id !== competitionId)
         : [...prev.assignedCompetitions, competitionId];
@@ -148,7 +277,7 @@ export default function AdminStaff() {
                 Add Staff
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Add New Staff Member</DialogTitle>
               </DialogHeader>
@@ -174,40 +303,6 @@ export default function AdminStaff() {
                     required
                   />
                 </div>
-                <div>
-                  <Label>Role</Label>
-                  <Select
-                    value={formData.role}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
-                  >
-                    <SelectTrigger className="rounded-[3rem]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={UserRole.Judge}>Judge</SelectItem>
-                      <SelectItem value={UserRole.Host}>Host</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {formData.role === UserRole.Judge && (
-                  <div>
-                    <Label>Assign Competitions</Label>
-                    <div className="space-y-2 mt-2">
-                      {data.competitions.map((comp) => (
-                        <div key={comp.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`comp-${comp.id}`}
-                            checked={formData.assignedCompetitions.includes(comp.id)}
-                            onCheckedChange={() => handleCompetitionToggle(comp.id)}
-                          />
-                          <Label htmlFor={`comp-${comp.id}`} className="cursor-pointer">
-                            {comp.name}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 <Button type="submit" className="w-full rounded-[3rem]">
                   Add Staff Member
                 </Button>
@@ -220,125 +315,15 @@ export default function AdminStaff() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {staff.map((user) => (
-            <Card key={user.id} className="rounded-[3rem] border-2 bg-muted/30 hover:shadow-lg transition-shadow">
-              <CardContent className="p-8">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold uppercase mb-2">{user.username}</h2>
-                    <div className="inline-block bg-[#ffa500] text-white px-4 py-1 rounded-full text-sm font-bold uppercase">
-                      {user.role}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEdit(user.id)}
-                      className="rounded-full w-10 h-10 p-0 text-blue-600 hover:bg-blue-50"
-                    >
-                      <i className="fas fa-edit text-lg" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDelete(user.id)}
-                      className="rounded-full w-10 h-10 p-0 text-red-600 hover:bg-red-50"
-                    >
-                      <i className="fas fa-trash text-lg" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="text-sm text-muted-foreground mb-4">
-                  <span className="font-semibold">PWD:</span> {user.password}
-                </div>
-
-                {user.role === UserRole.Judge && (
-                  <div className="mt-6 pt-6 border-t">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase mb-4">
-                      Assign Competitions
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Select
-                        value={user.assignedCompetitions?.[0] || ''}
-                        onValueChange={(value) => {
-                          const currentAssignments = user.assignedCompetitions || [];
-                          if (value && !currentAssignments.includes(value)) {
-                            updateUser(user.id, {
-                              assignedCompetitions: [...currentAssignments, value]
-                            });
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="rounded-[3rem] border-2 border-black">
-                          <SelectValue placeholder="-- CATEGORY --" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[...new Set(data.competitions.flatMap(c => c.ageGroups))].map((ageGroup) => (
-                            <SelectItem key={ageGroup} value={ageGroup}>
-                              {ageGroup}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <Select
-                        value=""
-                        onValueChange={(value) => {
-                          const currentAssignments = user.assignedCompetitions || [];
-                          if (value && !currentAssignments.includes(value)) {
-                            updateUser(user.id, {
-                              assignedCompetitions: [...currentAssignments, value]
-                            });
-                            toast({
-                              title: 'Success',
-                              description: 'Competition assigned successfully'
-                            });
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="rounded-[3rem] border-2">
-                          <SelectValue placeholder="-- EVENT --" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {data.competitions.map((comp) => (
-                            <SelectItem key={comp.id} value={comp.id}>
-                              {comp.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {user.assignedCompetitions && user.assignedCompetitions.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        <p className="text-xs font-semibold text-muted-foreground">Assigned Events:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {user.assignedCompetitions.map((compId) => {
-                            const comp = data.competitions.find(c => c.id === compId);
-                            return comp ? (
-                              <div key={compId} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2">
-                                {comp.name}
-                                <button
-                                  onClick={() => {
-                                    updateUser(user.id, {
-                                      assignedCompetitions: user.assignedCompetitions?.filter(id => id !== compId)
-                                    });
-                                  }}
-                                  className="hover:text-destructive"
-                                >
-                                  <i className="fas fa-times" />
-                                </button>
-                              </div>
-                            ) : null;
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <StaffCard
+              key={user.id}
+              user={user}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              updateUser={updateUser}
+              competitions={data.competitions}
+              toast={toast}
+            />
           ))}
         </div>
 
@@ -353,8 +338,8 @@ export default function AdminStaff() {
                 <Label htmlFor="edit-username">Username</Label>
                 <Input
                   id="edit-username"
-                  value={formData.username}
-                  onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                  value={editFormData.username}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, username: e.target.value }))}
                   className="rounded-[3rem]"
                   required
                 />
@@ -364,8 +349,8 @@ export default function AdminStaff() {
                 <Input
                   id="edit-password"
                   type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  value={editFormData.password}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, password: e.target.value }))}
                   className="rounded-[3rem]"
                   required
                 />
@@ -373,19 +358,20 @@ export default function AdminStaff() {
               <div>
                 <Label>Role</Label>
                 <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as UserRole }))}
+                  value={editFormData.role}
+                  onValueChange={(value) => setEditFormData(prev => ({ ...prev, role: value as UserRole }))}
                 >
                   <SelectTrigger className="rounded-[3rem]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value={UserRole.Admin}>Admin</SelectItem>
                     <SelectItem value={UserRole.Judge}>Judge</SelectItem>
                     <SelectItem value={UserRole.Host}>Host</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {formData.role === UserRole.Judge && (
+              {editFormData.role === UserRole.Judge && (
                 <div>
                   <Label>Assign Competitions</Label>
                   <div className="space-y-2 mt-2">
@@ -393,7 +379,7 @@ export default function AdminStaff() {
                       <div key={comp.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={`edit-comp-${comp.id}`}
-                          checked={formData.assignedCompetitions.includes(comp.id)}
+                          checked={editFormData.assignedCompetitions.includes(comp.id)}
                           onCheckedChange={() => handleCompetitionToggle(comp.id)}
                         />
                         <Label htmlFor={`edit-comp-${comp.id}`} className="cursor-pointer">
