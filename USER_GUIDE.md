@@ -62,8 +62,8 @@ Open your web browser and navigate to the application URL. You'll see the home p
 ## Admin Guide
 
 ### Login
-- Username: `admin`
-- Password: `admin123`
+- Username: `Riya A`
+- Password: `Radha@108`
 - Navigate to Admin Login from the home page
 
 ### Dashboard Overview
@@ -71,16 +71,23 @@ View real-time statistics:
 - Total Participants
 - Total Revenue
 - Confirmed Registrations
+- System Status (Registration Portal Open/Closed)
 
 ### Managing Registrations
 
 1. **View All Registrations**
    - Click "Registration Management"
    - Use filters to find specific registrations:
-     - Filter by Age Group
+     - Filter by Age Group (Kids/Juniors/Teens)
      - Filter by Competition
+   - View complete participant details in the master table
 
-2. **Add On-Spot Registration**
+2. **Verify Payment Proof**
+   - For online payments, click "View Proof" button
+   - Review the payment screenshot uploaded by the participant
+   - Verify transaction details match the registration
+
+3. **Add On-Spot Registration**
    - Click "On-Spot Registration"
    - Enter participant details
    - Select date of birth

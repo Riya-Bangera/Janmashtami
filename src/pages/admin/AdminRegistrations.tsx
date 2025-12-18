@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole, AgeGroup, PaymentMethod, RegistrationStatus } from '@/types/types';
 import { calculateAge, getAgeGroup, calculateFee, generateRegistrationId } from '@/lib/utils';
@@ -20,6 +21,8 @@ export default function AdminRegistrations() {
   const [filterAgeGroup, setFilterAgeGroup] = useState<string>('all');
   const [filterCompetition, setFilterCompetition] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [proofDialogOpen, setProofDialogOpen] = useState(false);
+  const [selectedProof, setSelectedProof] = useState<string>('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -99,6 +102,19 @@ export default function AdminRegistrations() {
       .map(id => data.competitions.find(c => c.id === id)?.name)
       .filter(Boolean)
       .join(', ');
+  };
+
+  const handleViewProof = (screenshot?: string) => {
+    if (screenshot) {
+      setSelectedProof(screenshot);
+      setProofDialogOpen(true);
+    } else {
+      toast({
+        title: 'No Proof Available',
+        description: 'This registration does not have a payment screenshot',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
@@ -238,6 +254,7 @@ export default function AdminRegistrations() {
                     <TableHead>Fee</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -246,11 +263,40 @@ export default function AdminRegistrations() {
                       <TableCell className="font-mono text-sm">{reg.registrationId}</TableCell>
                       <TableCell className="font-semibold">{reg.name}</TableCell>
                       <TableCell>{reg.age}</TableCell>
-                      <TableCell>{reg.ageGroup}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="rounded-[3rem]">{reg.ageGroup}</Badge>
+                      </TableCell>
                       <TableCell className="max-w-xs truncate">{getCompetitionNames(reg.competitions)}</TableCell>
                       <TableCell>₹{reg.totalFee}</TableCell>
-                      <TableCell className="capitalize">{reg.paymentMethod}</TableCell>
-                      <TableCell className="capitalize">{reg.status}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={reg.paymentMethod === PaymentMethod.Online ? 'default' : 'secondary'}
+                          className="rounded-[3rem] capitalize"
+                        >
+                          {reg.paymentMethod}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={reg.status === RegistrationStatus.Confirmed ? 'default' : 'outline'}
+                          className="rounded-[3rem] capitalize"
+                        >
+                          {reg.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {reg.paymentMethod === PaymentMethod.Online && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewProof(reg.paymentScreenshot)}
+                            className="rounded-[3rem]"
+                          >
+                            <i className="fas fa-image mr-2" />
+                            View Proof
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -258,6 +304,28 @@ export default function AdminRegistrations() {
             </div>
           </CardContent>
         </Card>
+
+        <Dialog open={proofDialogOpen} onOpenChange={setProofDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Payment Proof</DialogTitle>
+            </DialogHeader>
+            <div className="flex justify-center p-4">
+              {selectedProof && (
+                <img 
+                  src={selectedProof} 
+                  alt="Payment Screenshot" 
+                  className="max-w-full max-h-[70vh] object-contain rounded-[3rem]"
+                />
+              )}
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={() => setProofDialogOpen(false)} className="rounded-[3rem]">
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

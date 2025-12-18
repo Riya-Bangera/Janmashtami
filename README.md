@@ -112,8 +112,8 @@ npm run build
 ## Default Credentials
 
 ### Admin Access
-- Username: `admin`
-- Password: `admin123`
+- Username: `Riya A`
+- Password: `Radha@108`
 
 ### Initial Setup
 1. Login as admin

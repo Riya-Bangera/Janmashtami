@@ -67,8 +67,8 @@ const defaultCompetitions: Competition[] = [
 const defaultUsers: User[] = [
   {
     id: 'admin-1',
-    username: 'admin',
-    password: 'admin123',
+    username: 'Riya A',
+    password: 'Radha@108',
     role: UserRole.Admin
   }
 ];

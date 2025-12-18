@@ -42,7 +42,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card className="rounded-[3rem] border-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -76,6 +76,23 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-bold">{confirmedRegistrations}</p>
+            </CardContent>
+          </Card>
+
+          <Card className={`rounded-[3rem] border-2 ${data.settings.registrationOpen ? 'bg-muted/50' : 'bg-destructive/10'}`}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <i className={`fas ${data.settings.registrationOpen ? 'fa-door-open' : 'fa-door-closed'} text-primary`} />
+                System Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">
+                {data.settings.registrationOpen ? 'Open' : 'Closed'}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Registration Portal
+              </p>
             </CardContent>
           </Card>
         </div>
