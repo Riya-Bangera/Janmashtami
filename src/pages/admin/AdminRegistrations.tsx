@@ -26,7 +26,7 @@ export default function AdminRegistrations() {
 
   const [formData, setFormData] = useState({
     name: '',
-    dateOfBirth: '',
+    age: '',
     parentName: '',
     parentPhone: '',
     selectedCompetitions: [] as string[],
@@ -59,7 +59,7 @@ export default function AdminRegistrations() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.dateOfBirth || formData.selectedCompetitions.length === 0 || !formData.parentName || !formData.parentPhone) {
+    if (!formData.name || !formData.age || formData.selectedCompetitions.length === 0 || !formData.parentName || !formData.parentPhone) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
@@ -68,15 +68,29 @@ export default function AdminRegistrations() {
       return;
     }
 
-    const age = calculateAge(formData.dateOfBirth);
+    const age = parseInt(formData.age);
+    if (isNaN(age) || age < 1 || age > 100) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid age (1-100)',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     const ageGroup = getAgeGroup(age);
     const totalFee = calculateFee(data.competitions, formData.selectedCompetitions);
     const registrationId = generateRegistrationId();
 
+    // Calculate approximate date of birth (current year - age)
+    const currentYear = new Date().getFullYear();
+    const birthYear = currentYear - age;
+    const approximateDOB = `${birthYear}-01-01`;
+
     addRegistration({
       registrationId,
       name: formData.name,
-      dateOfBirth: formData.dateOfBirth,
+      dateOfBirth: approximateDOB,
       age,
       ageGroup,
       competitions: formData.selectedCompetitions,
@@ -94,7 +108,7 @@ export default function AdminRegistrations() {
 
     setFormData({
       name: '',
-      dateOfBirth: '',
+      age: '',
       parentName: '',
       parentPhone: '',
       selectedCompetitions: [],
@@ -193,19 +207,22 @@ export default function AdminRegistrations() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="dob">Date of Birth</Label>
+                    <Label htmlFor="age">Age (years)</Label>
                     <Input
-                      id="dob"
-                      type="date"
-                      value={formData.dateOfBirth}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                      id="age"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={formData.age}
+                      onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
                       className="rounded-[3rem]"
+                      placeholder="Enter age"
                       required
                     />
-                    {formData.dateOfBirth && (
+                    {formData.age && parseInt(formData.age) > 0 && (
                       <div className="mt-2 p-3 bg-muted rounded-[3rem] text-sm">
-                        <p><strong>Age:</strong> {calculateAge(formData.dateOfBirth)} years</p>
-                        <p><strong>Age Group:</strong> {getAgeGroup(calculateAge(formData.dateOfBirth))}</p>
+                        <p><strong>Age:</strong> {formData.age} years</p>
+                        <p><strong>Age Group:</strong> {getAgeGroup(parseInt(formData.age))}</p>
                       </div>
                     )}
                   </div>
@@ -235,8 +252,8 @@ export default function AdminRegistrations() {
                   <div>
                     <Label>Select Competitions (Based on Age Group)</Label>
                     <div className="space-y-2 mt-2">
-                      {formData.dateOfBirth && data.competitions
-                        .filter(comp => comp.ageGroups.includes(getAgeGroup(calculateAge(formData.dateOfBirth))))
+                      {formData.age && parseInt(formData.age) > 0 && data.competitions
+                        .filter(comp => comp.ageGroups.includes(getAgeGroup(parseInt(formData.age))))
                         .map((comp) => (
                           <div key={comp.id} className="flex items-center space-x-2">
                             <Checkbox
@@ -249,8 +266,8 @@ export default function AdminRegistrations() {
                             </Label>
                           </div>
                         ))}
-                      {!formData.dateOfBirth && (
-                        <p className="text-sm text-muted-foreground">Please enter date of birth first</p>
+                      {(!formData.age || parseInt(formData.age) <= 0) && (
+                        <p className="text-sm text-muted-foreground">Please enter age first</p>
                       )}
                     </div>
                   </div>
