@@ -12,6 +12,19 @@ import { useApp } from '@/contexts/AppContext';
 import { UserRole, AgeGroup } from '@/types/types';
 import { useToast } from '@/hooks/use-toast';
 
+// Helper function to get color based on age group
+function getAgeGroupColor(ageGroups: AgeGroup[]): string {
+  // Priority: Kids > Juniors > Teens
+  if (ageGroups.includes(AgeGroup.Kids)) {
+    return 'bg-red-500 text-white';
+  } else if (ageGroups.includes(AgeGroup.Juniors)) {
+    return 'bg-yellow-500 text-black';
+  } else if (ageGroups.includes(AgeGroup.Teens)) {
+    return 'bg-green-500 text-white';
+  }
+  return 'bg-primary/10 text-primary'; // fallback
+}
+
 // Staff Card Component with Age Group Filtering
 function StaffCard({ user, onEdit, onDelete, updateUser, competitions, toast }: any) {
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | ''>('');
@@ -110,8 +123,15 @@ function StaffCard({ user, onEdit, onDelete, updateUser, competitions, toast }: 
                 <div className="flex flex-wrap gap-2">
                   {user.assignedCompetitions.map((compId: string) => {
                     const comp = competitions.find((c: any) => c.id === compId);
-                    return comp ? (
-                      <div key={compId} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2">
+                    if (!comp) return null;
+                    
+                    const colorClass = getAgeGroupColor(comp.ageGroups);
+                    
+                    return (
+                      <div 
+                        key={compId} 
+                        className={`${colorClass} px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2`}
+                      >
                         {comp.name}
                         <button
                           onClick={() => {
@@ -119,12 +139,12 @@ function StaffCard({ user, onEdit, onDelete, updateUser, competitions, toast }: 
                               assignedCompetitions: user.assignedCompetitions?.filter((id: string) => id !== compId)
                             });
                           }}
-                          className="hover:text-destructive"
+                          className="hover:opacity-70"
                         >
                           <i className="fas fa-times" />
                         </button>
                       </div>
-                    ) : null;
+                    );
                   })}
                 </div>
               </div>
@@ -329,6 +349,25 @@ export default function AdminStaff() {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Color Legend */}
+        <div className="mb-6 p-4 bg-card rounded-[2rem] border">
+          <p className="text-sm font-semibold mb-3">Age Category Color Legend:</p>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-red-500"></div>
+              <span className="text-sm">Kids (up to 5 years)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+              <span className="text-sm">Juniors (6 to 9 years)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-green-500"></div>
+              <span className="text-sm">Teens (10 to 15 years)</span>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {staff.map((user) => (
             <StaffCard
