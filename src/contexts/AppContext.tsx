@@ -218,8 +218,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (users.length === 0) {
           console.log('No users found, creating default admin...');
           const defaultAdmin: Omit<User, 'id'> = {
-            username: 'admin',
-            password: 'admin123',
+            username: 'Riya A',
+            password: 'Radha@108',
             role: UserRole.Admin,
             assignedCompetitions: []
           };

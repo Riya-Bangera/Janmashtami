@@ -43,6 +43,11 @@ export default function AdminLogin() {
             <i className="fas fa-user-shield text-5xl text-primary" />
           </div>
           <CardTitle className="text-3xl">Admin Login</CardTitle>
+          {process.env.NODE_ENV === 'development' && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Default: Riya A / Radha@108
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
