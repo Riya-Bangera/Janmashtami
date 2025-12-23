@@ -17,6 +17,8 @@ export default function AdminSettings() {
 
   const [upiId, setUpiId] = useState(data.settings.upiId);
   const [registrationOpen, setRegistrationOpen] = useState(data.settings.registrationOpen);
+  const [eventYear, setEventYear] = useState(data.settings.eventYear || new Date().getFullYear());
+  const [eventDate, setEventDate] = useState(data.settings.eventDate || new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     if (!currentUser || currentUser.role !== UserRole.Admin) {
@@ -29,7 +31,9 @@ export default function AdminSettings() {
   const handleSave = () => {
     updateSettings({
       upiId,
-      registrationOpen
+      registrationOpen,
+      eventYear,
+      eventDate
     });
 
     toast({
@@ -76,6 +80,51 @@ export default function AdminSettings() {
               <div className="p-4 bg-accent/30 rounded-[3rem]">
                 <p className="text-sm">
                   Current Status: <span className="font-semibold">{registrationOpen ? 'Open' : 'Closed'}</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[3rem]">
+            <CardHeader>
+              <CardTitle>Event Date & Year</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="event-year">Event Year</Label>
+                <Input
+                  id="event-year"
+                  type="number"
+                  value={eventYear}
+                  onChange={(e) => setEventYear(parseInt(e.target.value))}
+                  className="rounded-[3rem]"
+                  placeholder="2025"
+                  min="2020"
+                  max="2100"
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  The year of the Janmashtami event
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="event-date">Event Date</Label>
+                <Input
+                  id="event-date"
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  className="rounded-[3rem]"
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  The main date of the Janmashtami celebration
+                </p>
+              </div>
+
+              <div className="p-4 bg-accent/30 rounded-[3rem]">
+                <p className="text-sm">
+                  <i className="fas fa-calendar-alt mr-2 text-primary" />
+                  Event: <span className="font-semibold">{new Date(eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </p>
               </div>
             </CardContent>

@@ -22,6 +22,7 @@ export default function AdminCompetitions() {
   const [formData, setFormData] = useState({
     name: '',
     time: '',
+    date: '',
     ageGroups: [] as AgeGroup[],
     rubrics: [{ id: 'r1', name: '', maxScore: 10 }] as Rubric[]
   });
@@ -80,6 +81,7 @@ export default function AdminCompetitions() {
     addCompetition({
       name: formData.name,
       time: formData.time,
+      date: formData.date,
       ageGroups: formData.ageGroups,
       rubrics: formData.rubrics
     });
@@ -92,6 +94,7 @@ export default function AdminCompetitions() {
     setFormData({
       name: '',
       time: '',
+      date: '',
       ageGroups: [],
       rubrics: [{ id: 'r1', name: '', maxScore: 10 }]
     });
@@ -115,6 +118,7 @@ export default function AdminCompetitions() {
       setFormData({
         name: comp.name,
         time: comp.time || '',
+        date: comp.date || '',
         ageGroups: comp.ageGroups,
         rubrics: comp.rubrics
       });
@@ -139,6 +143,7 @@ export default function AdminCompetitions() {
     updateCompetition(selectedCompetition, {
       name: formData.name,
       time: formData.time,
+      date: formData.date,
       ageGroups: formData.ageGroups,
       rubrics: formData.rubrics
     });
@@ -203,6 +208,16 @@ export default function AdminCompetitions() {
                     onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
                     className="rounded-[3rem]"
                     placeholder="e.g., 10:00 AM"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="date">Date</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                    className="rounded-[3rem]"
                   />
                 </div>
                 <div>
@@ -290,6 +305,7 @@ export default function AdminCompetitions() {
                         <TableRow>
                           <TableHead>Name</TableHead>
                           <TableHead>Time</TableHead>
+                          <TableHead>Date</TableHead>
                           <TableHead>Rubrics</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
@@ -298,7 +314,8 @@ export default function AdminCompetitions() {
                         {competitions.map((comp) => (
                           <TableRow key={comp.id}>
                             <TableCell className="font-semibold">{comp.name}</TableCell>
-                            <TableCell>{comp.time}</TableCell>
+                            <TableCell>{comp.time || '-'}</TableCell>
+                            <TableCell>{comp.date ? new Date(comp.date).toLocaleDateString() : '-'}</TableCell>
                             <TableCell>
                               <div className="text-sm">
                                 {comp.rubrics.map((r, idx) => (
@@ -362,6 +379,16 @@ export default function AdminCompetitions() {
                   onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
                   className="rounded-[3rem]"
                   placeholder="e.g., 10:00 AM"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-date">Date</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  className="rounded-[3rem]"
                 />
               </div>
               <div>

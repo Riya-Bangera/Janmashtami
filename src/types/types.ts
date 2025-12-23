@@ -36,6 +36,7 @@ export interface Competition {
   name: string;
   ageGroups: AgeGroup[];
   time?: string;
+  date?: string;
   rubrics: Rubric[];
 }
 
@@ -95,6 +96,8 @@ export interface Result {
 export interface Settings {
   upiId: string;
   registrationOpen: boolean;
+  eventYear?: number;
+  eventDate?: string;
 }
 
 export interface AppData {

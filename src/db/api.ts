@@ -106,6 +106,7 @@ export async function getAllCompetitions(): Promise<Competition[]> {
     name: row.name,
     ageGroups: row.age_groups,
     time: row.time,
+    date: row.date,
     rubrics: row.rubrics
   }));
 }
@@ -118,6 +119,7 @@ export async function createCompetition(competition: Competition): Promise<Compe
       name: competition.name,
       age_groups: competition.ageGroups,
       time: competition.time,
+      date: competition.date,
       rubrics: competition.rubrics
     })
     .select()
@@ -133,6 +135,7 @@ export async function createCompetition(competition: Competition): Promise<Compe
     name: data.name,
     ageGroups: data.age_groups,
     time: data.time,
+    date: data.date,
     rubrics: data.rubrics
   };
 }
@@ -143,6 +146,7 @@ export async function updateCompetition(id: string, updates: Partial<Competition
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.ageGroups !== undefined) updateData.age_groups = updates.ageGroups;
   if (updates.time !== undefined) updateData.time = updates.time;
+  if (updates.date !== undefined) updateData.date = updates.date;
   if (updates.rubrics !== undefined) updateData.rubrics = updates.rubrics;
   
   const { error } = await supabase
@@ -510,13 +514,17 @@ export async function getSettings(): Promise<Settings | null> {
   if (!data) {
     return {
       upiId: 'iskcon@upi',
-      registrationOpen: true
+      registrationOpen: true,
+      eventYear: new Date().getFullYear(),
+      eventDate: new Date().toISOString().split('T')[0]
     };
   }
   
   return {
     upiId: data.upi_id,
-    registrationOpen: data.registration_open
+    registrationOpen: data.registration_open,
+    eventYear: data.event_year,
+    eventDate: data.event_date
   };
 }
 
@@ -525,6 +533,8 @@ export async function updateSettings(updates: Partial<Settings>): Promise<boolea
   
   if (updates.upiId !== undefined) updateData.upi_id = updates.upiId;
   if (updates.registrationOpen !== undefined) updateData.registration_open = updates.registrationOpen;
+  if (updates.eventYear !== undefined) updateData.event_year = updates.eventYear;
+  if (updates.eventDate !== undefined) updateData.event_date = updates.eventDate;
   
   const { error } = await supabase
     .from('settings')

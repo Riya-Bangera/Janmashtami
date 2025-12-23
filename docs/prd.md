@@ -5,7 +5,7 @@
 ### 1.1 Application Name
 Sri Krishna Janmashtami Competitions Management System\n
 ### 1.2 Application Description
-A comprehensive web-based competition management platform for organizing and managing Sri Krishna Janmashtami festival competitions. The system supports multi-role access (Public Users, Admins, Judges, Hosts) with complete registration, scoring, and result management capabilities. **The system is designed for concurrent multi-device access with real-time data synchronization.**
+A comprehensive web-based competition management platform for organizing and managing Sri Krishna Janmashtami festival competitions. The system supports multi-role access (Public Users, Admins, Judges, Hosts) with complete registration, scoring, and result management capabilities. **The system is designed for concurrent multi-device access with real-time data synchronization and annual reusability with configurable event dates.**
 
 ## 2. Technical Architecture
 
@@ -17,6 +17,7 @@ A comprehensive web-based competition management platform for organizing and man
 - **Local Caching**: IndexedDB for offline capability and performance optimization
 - **Routing**: react-router-dom with HashRouter\n- **Icons**: FontAwesome 6.4.0 (primary brand mark: fa-spa Lotus symbol)
 - **PDF Generation**: jsPDF library for receipt download
+- **Excel Export**: SheetJS (xlsx) library for data export functionality
 - **SMS/WhatsApp Integration**: API integration for sending receipt to parent's phone number
 - **Real-time Sync**: WebSocket or Firebase SDK for live data updates across devices
 
@@ -29,9 +30,9 @@ A comprehensive web-based competition management platform for organizing and man
 - **Concurrent Editing**: Optimistic UI updates with server-side validation
 
 ### 2.3 Data Storage
-- **Primary Storage**: Cloud database (Firebase Realtime Database or Firestore)
-- **Local Cache**: IndexedDB for offline access and performance
-- **Key Data Entities**: users, registrations, scores, results, settings\n- **Data Sync Strategy**: \n  - Real-time listeners for critical data (registrations, scores, results)
+- **Primary Storage**: Cloud database (Firebase Realtime Database or Firestore)\n- **Local Cache**: IndexedDB for offline access and performance
+- **Key Data Entities**: users, registrations, scores, results, settings, eventConfig
+- **Data Sync Strategy**: \n  - Real-time listeners for critical data (registrations, scores, results)
   - Periodic sync for non-critical data (settings, user profiles)
   - Automatic retry mechanism for failed sync operations
 
@@ -146,6 +147,7 @@ Provides a high-level summary of the event's progress at a glance:
 - **System Status**: Displays whether the public registration portal is currently'Open' or 'Closed' for immediate status verification
 - **Active Users**: Shows number of admins, judges, and hosts currently online
 - **Real-time Updates**: All statistics update automatically without page refresh
+- **Data Export Button**: Prominent'Export All Data to Excel' button for downloading complete system data
 
 #### 5.2.2 Registrations (Participant Management)
 The most functional part of the dashboard, offering three distinct viewing and entry modes:
@@ -163,7 +165,8 @@ The most functional part of the dashboard, offering three distinct viewing and e
     - Optional: Add decline reason field
     - Sends notification to parent's phone: 'Your registration [ID] has been declined. Please contact9686892217 for details.'
     - **Multi-device Sync**: Decline action instantly updates across all devices
-- **Concurrent Editing Protection**: If another admin is currently reviewing a registration, show indicator: 'Admin [Name] is reviewing this registration'\n
+- **Concurrent Editing Protection**: If another admin is currently reviewing a registration, show indicator: 'Admin [Name] is reviewing this registration'\n- **Export to Excel Button**: Export filtered registration data to Excel file
+
 **Category Filter**:
 - Drill down into specific data by Age Group (Krishna Kids / Krishna Juniors / Krishna Teens)
 - Further filter by Specific Competition (e.g., Fancy Dress, Sloka Recitation, Solo Dance, etc.)
@@ -226,6 +229,17 @@ Manages accounts for everyone working behind the scenes:
 \n#### 5.2.5 Settings (Global Controls)
 Controls the 'Front-Door' and financial aspects of the app:
 
+**Event Date Configuration**:
+- **Competition Date Field**: Admin can set/update the competition date (format: DD/MM/YYYY)
+- **Competition Year Field**: Admin can set/update the competition year (format: YYYY)\n- **Date Display**: Updated date and year automatically reflect on:\n  - Public home page
+  - Registration forms
+  - PDF receipts
+  - Hall of Fame\n  - All event-related displays
+- **Multi-device Sync**: Date changes propagate to all devices and public pages within 2 seconds
+- **Annual Reset Option**: 'Prepare for Next Year' button that:\n  - Archives current year's data
+  - Clears registrations and scores\n  - Retains competition structure and staff accounts
+  - Updates year to next year
+
 **Registration Toggle**:
 - Master switch to open or close the public registration link
 - When closed, parents see a'Registration Closed' message on the home screen
@@ -242,14 +256,36 @@ Controls the 'Front-Door' and financial aspects of the app:
 \n**System Health Monitor**:
 - Display database connection status
 - Show sync latency metrics
-- Alert if any device loses connection\n\n### 5.3 Judge Portal Features
+- Alert if any device loses connection\n\n**Data Export Settings**:
+- Configure Excel export preferences (columns to include, date format, etc.)
+- Export history log showing previous exports with timestamps
+\n#### 5.2.6 Data Export Functionality
+**Excel Export Feature**:
+- **Export All Data Button**: Prominent button in Admin Dashboard to export complete system data
+- **Export Options**:
+  - All Registrations (with filters applied)
+  - All Scores and Results
+  - Revenue Summary
+  - Competition-wise Participant Lists
+  - Judge-wise Score Sheets
+  - Complete System Data (all tables)
+- **Excel File Structure**:
+  - Multiple sheets in single workbook:\n    - Sheet 1: Registrations (ID, Child Name, DOB, Age, Category, Parent Name, Phone, Competitions, Fee, Payment Method, Status, Registration Date)\n    - Sheet 2: Scores (Competition, Age Group, Participant Name, Judge Name, Rubric Scores, Total Score, Rank)\n    - Sheet 3: Results (Age Group, Competition, Rank1, Rank 2, Rank 3)\n    - Sheet 4: Revenue (Total Registrations, Total Revenue, Payment Method Breakdown, Date-wise Revenue)
+    - Sheet 5: Competition Summary (Competition Name, Age Group, Total Participants, Scheduled Time)\n- **File Naming Convention**: 'Janmashtami_[Year]_Export_[Date]_[Time].xlsx'
+- **Export Triggers**:
+  - Manual export via button click
+  - Automatic export at end of event day
+  - Scheduled exports (configurable)
+- **Multi-device Support**: Export can be triggered from any admin device
+- **Download Options**: Direct download to device or email to admin
+
+### 5.3 Judge Portal Features
 
 #### 5.3.1 Event Access\n- View only assigned competitions
 - Competitions organized by age group (Krishna Kids / Krishna Juniors / Krishna Teens)
 - View only'Confirmed' registrations (Pending and Declined registrations are hidden)
 - **Real-time Participant List**: List updates automatically as admins approve new registrations
-
-#### 5.3.2 Scoring Interface
+\n#### 5.3.2 Scoring Interface
 - Select participant from list
 - Input marks based on event-specific rubrics
 - Matrix view for score consolidation across judges
@@ -281,9 +317,9 @@ Controls the 'Front-Door' and financial aspects of the app:
   - **Winners** (Rank 1, Rank 2, Rank 3with participant names)
 - **Real-time Results**: Winner announcements appear automatically when judges publish results
 - **Public Display Control**: Host can choose when to publish results to public Hall of Fame
-\n## 6. Business Logic\n
-### 6.1 Age Calculation
-- Automatic calculation based on birth date and current date
+\n## 6. Business Logic
+
+### 6.1 Age Calculation\n- Automatic calculation based on birth date and current date
 - Auto-assignment to AgeGroup categories:\n  - Krishna Kids: 0-5 years
   - Krishna Juniors: 6-9 years
   - Krishna Teens: 10-15 years
@@ -325,18 +361,19 @@ Controls the 'Front-Door' and financial aspects of the app:
 4. **Winner Determination**: System automatically calculates winners based on aggregated scores, but judges can manually override the rankings
 5. **Judge Publication**: Judges publish the finalized winner list\n6. **Host Reception**: Published results are transmitted to the Host Portal in real-time
 7. **Public Display**: Host publishes results to the main page (Hall of Fame) in the format:
-   - Age Category
-   - Competition Name
-   - Winners (Rank 1, 2, 3)
+   - Age Category\n   - Competition Name
+   - Winners (Rank 1,2, 3)
 8. **Visibility Rule**: Results are visible to Host and Public only after Judge publishes and Host approves for public display
 9. **Multi-device Sync**: All result updates propagate to all connected devices instantly
 
 ### 6.6 PDF Receipt Generation
 - Use jsPDF library to generate downloadable PDF receipt
 - Include all registration details, payment information, and QR code
+- Include current competition date and year from settings
 - Optimize for mobile and desktop download
 - Automatically trigger receipt generation upon admin approval
-\n### 6.7 SMS/WhatsApp Integration
+
+### 6.7 SMS/WhatsApp Integration
 - Integrate with SMS/WhatsApp API service for automated message delivery
 - Send PDF receipt as attachment or provide download link
 - Send approval confirmation and decline notifications
@@ -348,6 +385,7 @@ Controls the 'Front-Door' and financial aspects of the app:
 - **Score Data**: Sync immediately as judges enter marks
 - **Result Data**: Sync instantly when judges publish winners
 - **Settings Changes**: Propagate to all devices within 2 seconds
+- **Event Date Changes**: Sync to all devices and public pages within 2 seconds
 
 **Conflict Resolution**:
 - **Timestamp-based**: Last write wins for non-critical data
@@ -363,9 +401,30 @@ Controls the 'Front-Door' and financial aspects of the app:
 - **Lazy Loading**: Load data on-demand for large lists
 - **Connection Pooling**: Reuse database connections for efficiency
 
+### 6.9 Excel Export Logic
+**Data Export Process**:
+1. **Data Collection**: Gather all relevant data from cloud database based on export selection
+2. **Data Formatting**: Format data according to Excel export structure (multiple sheets)\n3. **File Generation**: Use SheetJS (xlsx) library to create Excel workbook
+4. **File Naming**: Apply naming convention with year, date, and time
+5. **Download Trigger**: Initiate browser download or email delivery
+6. **Export Logging**: Record export action with admin name, timestamp, and export type
+7. **Multi-device Support**: Export can be triggered from any admin device without conflicts
+
+### 6.10 Annual Event Reset Logic
+**Year-End Preparation**:
+1. **Data Archiving**: Move current year's registrations, scores, and results to archive database
+2. **Data Clearing**: Clear active registrations and scores tables
+3. **Structure Retention**: Preserve competition definitions, rubrics, and staff accounts
+4. **Year Update**: Increment year in event configuration
+5. **Date Reset**: Clear competition date (admin must set new date for next year)
+6. **Confirmation Prompt**: Require admin confirmation before executing reset
+7. **Backup Creation**: Automatic backup of all data before reset
+8. **Multi-device Notification**: Notify all connected devices of system reset
+
 ## 7. Additional Requirements
 
-### 7.1 Metadata\n- App title: 'Sri Krishna Janmashtami Competitions'\n- Camera permissions in metadata.json for future QR scanning
+### 7.1 Metadata\n- App title: 'Sri Krishna Janmashtami Competitions'
+- Camera permissions in metadata.json for future QR scanning
 \n### 7.2 Accessibility
 - Mobile-first responsive design
 - High contrast text (black on light backgrounds)
@@ -385,4 +444,5 @@ Controls the 'Front-Door' and financial aspects of the app:
 - **Authentication**: JWT-based token authentication with role-based access control
 - **Data Encryption**: All data transmitted over HTTPS/WSS
 - **Session Management**: Automatic logout after 24 hours of inactivity
-- **Audit Logging**: Track all critical actions (approvals, score changes, result publications) with user and timestamp
+- **Audit Logging**: Track all critical actions (approvals, score changes, result publications, data exports, date changes) with user and timestamp\n- **Export Security**: Restrict Excel export functionality to Admin role only
+- **Data Privacy**: Ensure exported Excel files contain only authorized data based on admin permissions

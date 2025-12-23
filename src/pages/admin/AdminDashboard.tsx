@@ -4,10 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
 import { UserRole, RegistrationStatus } from '@/types/types';
+import { exportAllDataToExcel } from '@/utils/excelExport';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { currentUser, data, logout } = useApp();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!currentUser || currentUser.role !== UserRole.Admin) {
@@ -35,6 +38,22 @@ export default function AdminDashboard() {
     navigate('/');
   };
 
+  const handleExportAllData = () => {
+    try {
+      exportAllDataToExcel(data);
+      toast({
+        title: 'Success',
+        description: 'All data exported successfully to Excel'
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to export data',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-card">
@@ -43,10 +62,16 @@ export default function AdminDashboard() {
             <i className="fas fa-spa text-3xl text-primary" />
             <h1 className="text-2xl font-bold">Admin Dashboard</h1>
           </div>
-          <Button onClick={handleLogout} variant="outline" className="rounded-[3rem]">
-            <i className="fas fa-sign-out-alt mr-2" />
-            Logout
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleExportAllData} variant="default" className="rounded-[3rem]">
+              <i className="fas fa-file-excel mr-2" />
+              Export All Data
+            </Button>
+            <Button onClick={handleLogout} variant="outline" className="rounded-[3rem]">
+              <i className="fas fa-sign-out-alt mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
