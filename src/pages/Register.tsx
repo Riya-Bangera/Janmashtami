@@ -295,9 +295,20 @@ export default function Register() {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full rounded-[3rem]" size="lg">
-                  Next
-                </Button>
+                <div className="flex gap-4">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => navigate('/')} 
+                    className="flex-1 rounded-[3rem]"
+                    size="lg"
+                  >
+                    Back
+                  </Button>
+                  <Button type="submit" className="flex-1 rounded-[3rem]" size="lg">
+                    Next
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>
