@@ -140,7 +140,8 @@ const defaultUsers: User[] = [
     id: 'admin-1',
     username: 'Riya A',
     password: 'Radha@108',
-    role: UserRole.Admin
+    role: UserRole.Admin,
+    assignedCompetitions: []
   }
 ];
 
