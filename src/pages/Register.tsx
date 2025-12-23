@@ -189,15 +189,34 @@ export default function Register() {
   if (!data.settings.registrationOpen) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full rounded-[3rem]">
-          <CardHeader>
-            <CardTitle className="text-center">Registration Closed</CardTitle>
+        <Card className="max-w-2xl w-full rounded-[3rem]">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <i className="fas fa-spa text-6xl text-primary" />
+            </div>
+            <CardTitle className="text-3xl mb-2">Hare Krishna 🙏</CardTitle>
           </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-muted-foreground mb-6">
-              Registration is currently closed. Please check back later.
-            </p>
-            <Button onClick={() => navigate('/')} className="rounded-[3rem]">
+          <CardContent className="text-center space-y-6">
+            <Alert className="bg-primary/10 border-primary/20">
+              <AlertDescription className="text-lg">
+                <strong>Online registrations are closed now.</strong>
+                <br />
+                Please do offline registrations.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="bg-accent/50 p-6 rounded-[2rem]">
+              <p className="text-muted-foreground mb-2">
+                <i className="fas fa-info-circle mr-2" />
+                For offline registration assistance:
+              </p>
+              <p className="font-semibold">
+                Please visit our registration desk or contact the event organizers.
+              </p>
+            </div>
+
+            <Button onClick={() => navigate('/')} className="rounded-[3rem]" size="lg">
+              <i className="fas fa-home mr-2" />
               Back to Home
             </Button>
           </CardContent>
