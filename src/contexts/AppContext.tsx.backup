@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { AppData, User, Competition, Registration, Score, Result, Settings } from '@/types/types';
 import { UserRole, AgeGroup, PaymentMethod, RegistrationStatus } from '@/types/types';
-import * as api from '@/db/api';
+
+const STORAGE_KEY = 'iskcon_v23_db';
 
 const defaultSettings: Settings = {
   upiId: '9876543210@upi',
@@ -183,72 +184,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(initialData);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Load all data from Supabase on mount
   useEffect(() => {
-    async function loadData() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
       try {
-        setIsLoading(true);
-        
-        const [users, competitions, registrations, scores, results, settings] = await Promise.all([
-          api.getAllUsers(),
-          api.getAllCompetitions(),
-          api.getAllRegistrations(),
-          api.getAllScores(),
-          api.getAllResults(),
-          api.getSettings()
-        ]);
-
-        // If no competitions exist, create default ones
-        let finalCompetitions = competitions;
-        if (competitions.length === 0) {
-          console.log('No competitions found, creating defaults...');
-          for (const comp of defaultCompetitions) {
-            const created = await api.createCompetition(comp);
-            if (created) {
-              finalCompetitions.push(created);
-            }
-          }
-        }
-
-        // If no admin user exists, create default admin
-        let finalUsers = users;
-        if (users.length === 0) {
-          console.log('No users found, creating default admin...');
-          const defaultAdmin: Omit<User, 'id'> = {
-            username: 'admin',
-            password: 'admin123',
-            role: UserRole.Admin,
-            assignedCompetitions: []
-          };
-          const created = await api.createUser(defaultAdmin);
-          if (created) {
-            finalUsers.push(created);
-          }
-        }
-
-        setData({
-          users: finalUsers,
-          competitions: finalCompetitions,
-          registrations,
-          scores,
-          results,
-          settings: settings || defaultSettings
-        });
-        
-        setIsInitialized(true);
+        const parsedData = JSON.parse(stored);
+        setData({ ...initialData, ...parsedData });
       } catch (error) {
-        console.error('Failed to load data from Supabase:', error);
-        setData(initialData);
-        setIsInitialized(true);
-      } finally {
-        setIsLoading(false);
+        console.error('Failed to parse stored data:', error);
       }
     }
-
-    loadData();
+    setIsInitialized(true);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, [data]);
 
   const login = (username: string, password: string): User | null => {
     const user = data.users.find(u => u.username === username && u.password === password);
@@ -263,203 +215,141 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCurrentUser(null);
   };
 
-  const addUser = async (user: Omit<User, 'id'>) => {
-    const created = await api.createUser(user);
-    if (created) {
-      setData(prev => ({
-        ...prev,
-        users: [...prev.users, created]
-      }));
-    }
+  const addUser = (user: Omit<User, 'id'>) => {
+    const newUser: User = {
+      ...user,
+      id: `user-${Date.now()}`
+    };
+    setData(prev => ({
+      ...prev,
+      users: [...prev.users, newUser]
+    }));
   };
 
-  const updateUser = async (id: string, updates: Partial<User>) => {
-    const success = await api.updateUser(id, updates);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        users: prev.users.map(u => u.id === id ? { ...u, ...updates } : u)
-      }));
-    }
+  const updateUser = (id: string, updates: Partial<User>) => {
+    setData(prev => ({
+      ...prev,
+      users: prev.users.map(u => u.id === id ? { ...u, ...updates } : u)
+    }));
   };
 
-  const deleteUser = async (id: string) => {
-    const success = await api.deleteUser(id);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        users: prev.users.filter(u => u.id !== id)
-      }));
-    }
+  const deleteUser = (id: string) => {
+    setData(prev => ({
+      ...prev,
+      users: prev.users.filter(u => u.id !== id)
+    }));
   };
 
-  const addCompetition = async (competition: Omit<Competition, 'id'>) => {
+  const addCompetition = (competition: Omit<Competition, 'id'>) => {
     const newCompetition: Competition = {
       ...competition,
       id: `comp-${Date.now()}`
     };
-    const created = await api.createCompetition(newCompetition);
-    if (created) {
-      setData(prev => ({
-        ...prev,
-        competitions: [...prev.competitions, created]
-      }));
-    }
+    setData(prev => ({
+      ...prev,
+      competitions: [...prev.competitions, newCompetition]
+    }));
   };
 
-  const updateCompetition = async (id: string, updates: Partial<Competition>) => {
-    const success = await api.updateCompetition(id, updates);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        competitions: prev.competitions.map(c => c.id === id ? { ...c, ...updates } : c)
-      }));
-    }
+  const updateCompetition = (id: string, updates: Partial<Competition>) => {
+    setData(prev => ({
+      ...prev,
+      competitions: prev.competitions.map(c => c.id === id ? { ...c, ...updates } : c)
+    }));
   };
 
-  const deleteCompetition = async (id: string) => {
-    const success = await api.deleteCompetition(id);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        competitions: prev.competitions.filter(c => c.id !== id)
-      }));
-    }
+  const deleteCompetition = (id: string) => {
+    setData(prev => ({
+      ...prev,
+      competitions: prev.competitions.filter(c => c.id !== id)
+    }));
   };
 
-  const addRegistration = async (registration: Omit<Registration, 'id' | 'createdAt'>) => {
-    const newRegistration: Omit<Registration, 'id'> = {
+  const addRegistration = (registration: Omit<Registration, 'id' | 'createdAt'>) => {
+    const newRegistration: Registration = {
       ...registration,
+      id: `reg-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
-    const created = await api.createRegistration(newRegistration);
-    if (created) {
-      setData(prev => ({
-        ...prev,
-        registrations: [...prev.registrations, created]
-      }));
-    }
+    setData(prev => ({
+      ...prev,
+      registrations: [...prev.registrations, newRegistration]
+    }));
   };
 
-  const updateRegistration = async (id: string, updates: Partial<Registration>) => {
-    const success = await api.updateRegistration(id, updates);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        registrations: prev.registrations.map(r => r.id === id ? { ...r, ...updates } : r)
-      }));
-    }
+  const updateRegistration = (id: string, updates: Partial<Registration>) => {
+    setData(prev => ({
+      ...prev,
+      registrations: prev.registrations.map(r => r.id === id ? { ...r, ...updates } : r)
+    }));
   };
 
-  const deleteRegistration = async (id: string) => {
-    const success = await api.deleteRegistration(id);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        registrations: prev.registrations.filter(r => r.id !== id)
-      }));
-    }
+  const deleteRegistration = (id: string) => {
+    setData(prev => ({
+      ...prev,
+      registrations: prev.registrations.filter(r => r.id !== id)
+    }));
   };
 
-  const addScore = async (score: Omit<Score, 'id' | 'createdAt'>) => {
-    const newScore: Omit<Score, 'id'> = {
+  const addScore = (score: Omit<Score, 'id' | 'createdAt'>) => {
+    const newScore: Score = {
       ...score,
+      id: `score-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
-    const created = await api.createScore(newScore);
-    if (created) {
-      setData(prev => ({
-        ...prev,
-        scores: [...prev.scores, created]
-      }));
-    }
+    setData(prev => ({
+      ...prev,
+      scores: [...prev.scores, newScore]
+    }));
   };
 
-  const updateScore = async (id: string, updates: Partial<Score>) => {
-    const success = await api.updateScore(id, updates);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        scores: prev.scores.map(s => s.id === id ? { ...s, ...updates } : s)
-      }));
-    }
+  const updateScore = (id: string, updates: Partial<Score>) => {
+    setData(prev => ({
+      ...prev,
+      scores: prev.scores.map(s => s.id === id ? { ...s, ...updates } : s)
+    }));
   };
 
   const getScoresByCompetition = (competitionId: string): Score[] => {
     return data.scores.filter(s => s.competitionId === competitionId);
   };
 
-  const addResult = async (result: Omit<Result, 'id'>) => {
-    const created = await api.createResult(result);
-    if (created) {
-      setData(prev => ({
-        ...prev,
-        results: [...prev.results, created]
-      }));
-    }
+  const addResult = (result: Omit<Result, 'id'>) => {
+    const newResult: Result = {
+      ...result,
+      id: `result-${Date.now()}`
+    };
+    setData(prev => ({
+      ...prev,
+      results: [...prev.results, newResult]
+    }));
   };
 
-  const updateResult = async (id: string, updates: Partial<Result>) => {
-    const success = await api.updateResult(id, updates);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        results: prev.results.map(r => r.id === id ? { ...r, ...updates } : r)
-      }));
-    }
+  const updateResult = (id: string, updates: Partial<Result>) => {
+    setData(prev => ({
+      ...prev,
+      results: prev.results.map(r => r.id === id ? { ...r, ...updates } : r)
+    }));
   };
 
   const getResultByCompetition = (competitionId: string): Result | undefined => {
     return data.results.find(r => r.competitionId === competitionId);
   };
 
-  const updateSettings = async (updates: Partial<Settings>) => {
-    const success = await api.updateSettings(updates);
-    if (success) {
-      setData(prev => ({
-        ...prev,
-        settings: { ...prev.settings, ...updates }
-      }));
-    }
+  const updateSettings = (updates: Partial<Settings>) => {
+    setData(prev => ({
+      ...prev,
+      settings: { ...prev.settings, ...updates }
+    }));
   };
 
-  const resetData = async () => {
-    // This will reload all data from Supabase
-    setIsLoading(true);
-    try {
-      const [users, competitions, registrations, scores, results, settings] = await Promise.all([
-        api.getAllUsers(),
-        api.getAllCompetitions(),
-        api.getAllRegistrations(),
-        api.getAllScores(),
-        api.getAllResults(),
-        api.getSettings()
-      ]);
-
-      setData({
-        users,
-        competitions,
-        registrations,
-        scores,
-        results,
-        settings: settings || defaultSettings
-      });
-    } catch (error) {
-      console.error('Failed to reset data:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const resetData = () => {
+    setData(initialData);
+    setCurrentUser(null);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <i className="fas fa-spinner fa-spin text-4xl text-primary mb-4" />
-          <p className="text-lg text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+  if (!isInitialized) {
+    return null;
   }
 
   return (
