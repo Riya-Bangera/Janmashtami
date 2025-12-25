@@ -1,8 +1,24 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useApp } from '@/contexts/AppContext';
 
 export default function Home() {
+  const { data } = useApp();
+  
+  // Get year from eventDate if available, otherwise use current year
+  const getEventYear = () => {
+    if (data.settings.eventDate) {
+      return new Date(data.settings.eventDate).getFullYear();
+    }
+    if (data.settings.eventYear) {
+      return data.settings.eventYear;
+    }
+    return new Date().getFullYear();
+  };
+
+  const eventYear = getEventYear();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -11,7 +27,7 @@ export default function Home() {
             <i className="fas fa-spa text-6xl text-primary" />
           </div>
           <h1 className="text-5xl font-bold mb-4">Sri Krishna Janmashtami</h1>
-          <h2 className="text-3xl font-semibold text-muted-foreground mb-6">Competitions 2025</h2>
+          <h2 className="text-3xl font-semibold text-muted-foreground mb-6">Competitions {eventYear}</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Celebrate the divine birth of Lord Krishna through devotional competitions. 
             Join us in showcasing your talents and devotion.
@@ -89,7 +105,7 @@ export default function Home() {
         </Card>
 
         <div className="text-center mt-12 text-sm text-muted-foreground">
-          <p>2025 Sri Krishna Janmashtami Competitions</p>
+          <p>{eventYear} Sri Krishna Janmashtami Competitions</p>
         </div>
       </div>
     </div>
