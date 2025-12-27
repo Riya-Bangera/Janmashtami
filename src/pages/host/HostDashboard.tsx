@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function HostDashboard() {
   const navigate = useNavigate();
-  const { currentUser, data, updateRegistration, getResultByCompetition, logout } = useApp();
+  const { currentUser, data, updateRegistration, getResultByCompetition, updateResult, logout } = useApp();
   const { toast } = useToast();
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeGroup | ''>('');
   const [selectedCompetition, setSelectedCompetition] = useState<string>('');
@@ -45,6 +45,20 @@ export default function HostDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handlePublishToPublic = () => {
+    if (!result) return;
+
+    updateResult(result.id, {
+      publishedByHost: true,
+      publishedByHostAt: new Date().toISOString()
+    });
+
+    toast({
+      title: 'Success',
+      description: 'Results published to Hall of Fame! Winners are now visible to the public.'
+    });
   };
 
   const handleCallToStage = (registrationId: string) => {
@@ -211,7 +225,23 @@ export default function HostDashboard() {
                 </div>
               </div>
 
-              <div className="text-center mt-8">
+              <div className="text-center mt-8 space-y-4">
+                {!result.publishedByHost && (
+                  <Button 
+                    onClick={handlePublishToPublic} 
+                    className="rounded-[3rem] w-full md:w-auto" 
+                    size="lg"
+                  >
+                    <i className="fas fa-globe mr-2" />
+                    Publish to Hall of Fame
+                  </Button>
+                )}
+                {result.publishedByHost && (
+                  <div className="p-4 bg-green-500/20 rounded-[3rem] border border-green-500/30">
+                    <i className="fas fa-check-circle text-green-600 mr-2" />
+                    <span className="text-green-700 font-semibold">Published to Hall of Fame</span>
+                  </div>
+                )}
                 <Button onClick={() => setShowWinners(false)} variant="outline" className="rounded-[3rem]" size="lg">
                   <i className="fas fa-arrow-left mr-2" />
                   Back to Queue

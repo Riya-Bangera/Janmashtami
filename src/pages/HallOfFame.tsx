@@ -9,8 +9,21 @@ export default function HallOfFame() {
   const navigate = useNavigate();
   const { data } = useApp();
 
-  // Get only published results
-  const publishedResults = data.results.filter(r => r.published);
+  // Get event year
+  const getEventYear = () => {
+    if (data.settings.eventDate) {
+      return new Date(data.settings.eventDate).getFullYear();
+    }
+    if (data.settings.eventYear) {
+      return data.settings.eventYear;
+    }
+    return new Date().getFullYear();
+  };
+
+  const eventYear = getEventYear();
+
+  // Get only results published by host (public)
+  const publishedResults = data.results.filter(r => r.published && r.publishedByHost);
 
   // Group results by age group
   const resultsByAgeGroup = {
@@ -146,7 +159,7 @@ export default function HallOfFame() {
         </div>
 
         <div className="text-center mt-8 text-sm text-muted-foreground">
-          <p>2025 Sri Krishna Janmashtami Competitions</p>
+          <p>{eventYear} Sri Krishna Janmashtami Competitions</p>
         </div>
       </div>
     </div>

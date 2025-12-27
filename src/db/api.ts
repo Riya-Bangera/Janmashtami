@@ -424,7 +424,9 @@ export async function getAllResults(): Promise<Result[]> {
     rank2: row.rank2,
     rank3: row.rank3,
     published: row.published,
-    publishedAt: row.published_at
+    publishedAt: row.published_at,
+    publishedByHost: row.published_by_host || false,
+    publishedByHostAt: row.published_by_host_at
   }));
 }
 
@@ -437,7 +439,9 @@ export async function createResult(result: Omit<Result, 'id'>): Promise<Result |
       rank2: result.rank2,
       rank3: result.rank3,
       published: result.published,
-      published_at: result.publishedAt
+      published_at: result.publishedAt,
+      published_by_host: result.publishedByHost,
+      published_by_host_at: result.publishedByHostAt
     })
     .select()
     .single();
@@ -454,7 +458,9 @@ export async function createResult(result: Omit<Result, 'id'>): Promise<Result |
     rank2: data.rank2,
     rank3: data.rank3,
     published: data.published,
-    publishedAt: data.published_at
+    publishedAt: data.published_at,
+    publishedByHost: data.published_by_host || false,
+    publishedByHostAt: data.published_by_host_at
   };
 }
 
@@ -467,6 +473,8 @@ export async function updateResult(id: string, updates: Partial<Result>): Promis
   if (updates.rank3 !== undefined) updateData.rank3 = updates.rank3;
   if (updates.published !== undefined) updateData.published = updates.published;
   if (updates.publishedAt !== undefined) updateData.published_at = updates.publishedAt;
+  if (updates.publishedByHost !== undefined) updateData.published_by_host = updates.publishedByHost;
+  if (updates.publishedByHostAt !== undefined) updateData.published_by_host_at = updates.publishedByHostAt;
   
   const { error } = await supabase
     .from('results')

@@ -209,7 +209,8 @@ export default function JudgeDashboard() {
         rank2: selectedRanks.rank2,
         rank3: selectedRanks.rank3,
         published: true,
-        publishedAt: new Date().toISOString()
+        publishedAt: new Date().toISOString(),
+        publishedByHost: false
       });
     } else {
       addResult({
@@ -218,13 +219,14 @@ export default function JudgeDashboard() {
         rank2: selectedRanks.rank2,
         rank3: selectedRanks.rank3,
         published: true,
-        publishedAt: new Date().toISOString()
+        publishedAt: new Date().toISOString(),
+        publishedByHost: false
       });
     }
 
     toast({
       title: 'Success',
-      description: 'Results published successfully! Winners are now visible to hosts and public.'
+      description: 'Results published successfully! Winners are now visible to hosts for final approval.'
     });
 
     setResultsDialogOpen(false);
@@ -254,7 +256,8 @@ export default function JudgeDashboard() {
         rank1: selectedRanks.rank1,
         rank2: selectedRanks.rank2,
         rank3: selectedRanks.rank3,
-        published: false
+        published: false,
+        publishedByHost: false
       });
     }
 

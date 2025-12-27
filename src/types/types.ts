@@ -91,6 +91,8 @@ export interface Result {
   rank3: string;
   published: boolean;
   publishedAt?: string;
+  publishedByHost: boolean;
+  publishedByHostAt?: string;
 }
 
 export interface Settings {
