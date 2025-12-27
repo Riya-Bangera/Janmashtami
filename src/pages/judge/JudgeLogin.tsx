@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useApp } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole } from '@/types/types';
@@ -14,6 +15,7 @@ export default function JudgeLogin() {
   const { toast } = useToast();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,12 +62,25 @@ export default function JudgeLogin() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="rounded-[3rem]"
                 required
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="show-password" 
+                checked={showPassword}
+                onCheckedChange={(checked) => setShowPassword(checked as boolean)}
+              />
+              <Label 
+                htmlFor="show-password" 
+                className="text-sm font-normal cursor-pointer"
+              >
+                Show Password
+              </Label>
             </div>
             <Button type="submit" className="w-full rounded-[3rem]" size="lg">
               Login
