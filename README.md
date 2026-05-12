@@ -1,3 +1,7 @@
+# Welcome to Your Miaoda Project
+Miaoda Application Link URL
+    URL:https://medo.dev/projects/app-8bfa2zbq5o8x
+
 # Sri Krishna Janmashtami Competitions Management System
 
 A comprehensive web-based competition management platform for organizing and managing Sri Krishna Janmashtami festival competitions with multi-role access support.
