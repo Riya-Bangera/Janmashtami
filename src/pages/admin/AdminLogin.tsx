@@ -17,23 +17,30 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const user = login(username, password);
-    
-    if (user && user.role === UserRole.Admin) {
-      toast({
-        title: 'Success',
-        description: 'Logged in successfully'
-      });
-      navigate('/admin/dashboard');
-    } else {
-      toast({
-        title: 'Error',
-        description: 'Invalid credentials or insufficient permissions',
-        variant: 'destructive'
-      });
+    setIsSubmitting(true);
+
+    try {
+      const user = await login(username, password);
+
+      if (user && user.role === UserRole.Admin) {
+        toast({
+          title: 'Success',
+          description: 'Logged in successfully'
+        });
+        navigate('/admin/dashboard');
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Invalid credentials or insufficient permissions',
+          variant: 'destructive'
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -82,8 +89,13 @@ export default function AdminLogin() {
                 Show Password
               </Label>
             </div>
-            <Button type="submit" className="w-full rounded-[3rem]" size="lg">
-              Login
+            <Button
+              type="submit"
+              className="w-full rounded-[3rem]"
+              size="lg"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
             <Button
               type="button"

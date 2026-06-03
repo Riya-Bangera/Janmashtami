@@ -17,23 +17,30 @@ export default function JudgeLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const user = login(username, password);
-    
-    if (user && user.role === UserRole.Judge) {
-      toast({
-        title: 'Success',
-        description: 'Logged in successfully'
-      });
-      navigate('/judge/dashboard');
-    } else {
-      toast({
-        title: 'Error',
-        description: 'Invalid credentials or insufficient permissions',
-        variant: 'destructive'
-      });
+    setIsSubmitting(true);
+
+    try {
+      const user = await login(username, password);
+
+      if (user && user.role === UserRole.Judge) {
+        toast({
+          title: 'Success',
+          description: 'Logged in successfully'
+        });
+        navigate('/judge/dashboard');
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Invalid credentials or insufficient permissions',
+          variant: 'destructive'
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

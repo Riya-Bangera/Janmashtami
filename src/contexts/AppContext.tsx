@@ -157,7 +157,7 @@ const initialData: AppData = {
 interface AppContextType {
   data: AppData;
   currentUser: User | null;
-  login: (username: string, password: string) => User | null;
+  login: (username: string, password: string) => Promise<User | null>;
   logout: () => void;
   addUser: (user: Omit<User, 'id'>) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
@@ -225,7 +225,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           };
           const created = await api.createUser(defaultAdmin);
           if (created) {
-            finalUsers.push(created);
+            finalUsers = [created];
+          } else {
+            finalUsers = defaultUsers;
           }
         }
 
@@ -251,11 +253,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadData();
   }, []);
 
-  const login = (username: string, password: string): User | null => {
-    const user = data.users.find(u => u.username === username && u.password === password);
-    if (user) {
-      setCurrentUser(user);
-      return user;
+  const login = async (username: string, password: string): Promise<User | null> => {
+    const dbUser = await api.authenticateUser(username, password);
+    if (dbUser) {
+      setCurrentUser(dbUser);
+      setData(prev => ({
+        ...prev,
+        users: prev.users.some(u => u.id === dbUser.id)
+          ? prev.users
+          : [...prev.users, dbUser]
+      }));
+      return dbUser;
+    }
+
+    const localUser = data.users.find(
+      u => u.username === username && u.password === password
+    );
+    if (localUser) {
+      setCurrentUser(localUser);
+      return localUser;
     }
     return null;
   };

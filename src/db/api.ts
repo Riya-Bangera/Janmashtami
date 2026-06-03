@@ -25,6 +25,35 @@ export async function getAllUsers(): Promise<User[]> {
   }));
 }
 
+export async function authenticateUser(
+  username: string,
+  password: string
+): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .eq('password', password)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error authenticating user:', error);
+    return null;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    username: data.username,
+    password: data.password,
+    role: data.role,
+    assignedCompetitions: data.assigned_competitions || []
+  };
+}
+
 export async function createUser(user: Omit<User, 'id'>): Promise<User | null> {
   const { data, error } = await supabase
     .from('users')
