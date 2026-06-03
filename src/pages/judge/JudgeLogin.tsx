@@ -54,25 +54,32 @@ export default function JudgeLogin() {
           <CardTitle className="text-3xl">Judge Login</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="judge-login-username">Username</Label>
               <Input
-                id="username"
+                id="judge-login-username"
+                name="judge-login-username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="rounded-[3rem]"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="judge-login-password">Password</Label>
               <Input
-                id="password"
+                id="judge-login-password"
+                name="judge-login-password"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="rounded-[3rem]"
+                autoComplete="new-password"
                 required
               />
             </div>
