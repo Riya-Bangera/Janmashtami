@@ -8,9 +8,11 @@ const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxdi0DlKVJEDFPxGcb3y
 
 function syncToSheets(table: string, type: 'INSERT' | 'UPDATE' | 'DELETE', record: object) {
   // Fire-and-forget — never blocks the app
+  // mode: 'no-cors' is required for Google Apps Script Web App calls from browser
   fetch(SHEETS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain' }, // Apps Script requires text/plain for no-cors
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({ table, type, record })
   }).catch(() => { /* silently ignore — sheets sync is best-effort backup */ });
 }
