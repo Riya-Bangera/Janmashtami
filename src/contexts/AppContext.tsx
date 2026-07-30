@@ -389,7 +389,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const created = await api.createRegistration(newRegistration);
     const toAdd = created || { ...newRegistration, id: `reg-${Date.now()}` };
     setData(prev => ({ ...prev, registrations: [...prev.registrations, toAdd] }));
-    syncToSheets('registrations', 'INSERT', regToRow(toAdd));
+
+    // Resolve competition IDs → names for Google Sheets
+    const competitionNames = (toAdd.competitions || []).map(cid => {
+      const found = data.competitions.find(c => c.id === cid);
+      return found ? found.name : cid;
+    });
+    syncToSheets('registrations', 'INSERT', {
+      ...regToRow(toAdd),
+      competition_names: competitionNames,
+      payment_screenshot: toAdd.paymentScreenshot // base64 — Apps Script uploads to Drive
+    });
   };
 
   const updateRegistration = async (id: string, updates: Partial<Registration>) => {
