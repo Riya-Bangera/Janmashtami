@@ -398,7 +398,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     syncToSheets('registrations', 'INSERT', {
       ...regToRow(toAdd),
       competition_names: competitionNames,
-      payment_screenshot: toAdd.paymentScreenshot // base64 — Apps Script uploads to Drive
+      // payment_screenshot omitted — base64 is too large for no-cors fetch.
+      // Screenshot is stored safely in Supabase. Drive link column will show "In Supabase".
+      payment_screenshot: null
     });
   };
 
