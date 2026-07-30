@@ -158,105 +158,7 @@ export default function AdminRegistrations() {
     setDeclineDialogOpen(true);
   };
 
-  const downloadPDFReceipt = (reg: Registration) => {
-    try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      let yPos = 20;
 
-      // Header
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Sri Krishna Janmashtami', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 10;
-      
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Competition Registration Receipt', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 15;
-
-      // Registration Details
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Registration ID:', 20, yPos);
-      doc.setFont('helvetica', 'normal');
-      doc.text(reg.registrationId, 70, yPos);
-      yPos += 10;
-
-      // Line
-      doc.setLineWidth(0.5);
-      doc.line(20, yPos, pageWidth - 20, yPos);
-      yPos += 10;
-
-      // Participant Details
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Participant Details', 20, yPos);
-      yPos += 8;
-
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Name:', 20, yPos);
-      doc.text(reg.name, 70, yPos);
-      yPos += 7;
-      doc.text('Age:', 20, yPos);
-      doc.text(`${reg.age} years`, 70, yPos);
-      yPos += 7;
-      doc.text('Category:', 20, yPos);
-      doc.text(reg.ageGroup, 70, yPos);
-      yPos += 10;
-
-      // Parent Details
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Parent Details', 20, yPos);
-      yPos += 8;
-
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Parent Name:', 20, yPos);
-      doc.text(reg.parentName, 70, yPos);
-      yPos += 7;
-      doc.text('Parent Phone:', 20, yPos);
-      doc.text(reg.parentPhone, 70, yPos);
-      yPos += 10;
-
-      // Competitions
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Registered Competitions', 20, yPos);
-      yPos += 8;
-
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'normal');
-      reg.competitions.forEach(cid => {
-        const comp = data.competitions.find(c => c.id === cid);
-        if (comp) {
-          doc.text(`• ${comp.name} (${comp.time || 'N/A'})`, 20, yPos);
-          yPos += 7;
-        }
-      });
-      yPos += 5;
-
-      // Total Fee
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Total Fee Paid:', 20, yPos);
-      doc.text(`₹${reg.totalFee}`, 70, yPos);
-      yPos += 15;
-
-      // Footer
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Please bring this receipt on the day of the event.', pageWidth / 2, yPos, { align: 'center' });
-
-      doc.save(`Receipt_${reg.registrationId}.pdf`);
-      return true;
-    } catch (e) {
-      console.error(e);
-      return false;
-    }
-  };
 
   const handleApproveConfirm = async () => {
     if (!selectedRegistration) return;
@@ -272,11 +174,19 @@ export default function AdminRegistrations() {
       // Send standard receipt
       await sendReceipt(selectedRegistration, data.competitions);
 
-      // 1. Download the PDF Receipt automatically
-      downloadPDFReceipt(selectedRegistration);
-
-      // 2. Open WhatsApp Web with a simple message
-      const message = `*Sri Krishna Janmashtami Registration Approved*\n\nHare Krishna! The registration for *${selectedRegistration.name}* (ID: ${selectedRegistration.registrationId}) has been confirmed. \n\nAttached is the official PDF receipt for your reference. 🙏`;
+      // Open WhatsApp Web with the custom message
+      const compList = selectedRegistration.competitions
+        .map(cid => `• ${data.competitions.find(c => c.id === cid)?.name || cid}`)
+        .join('\n');
+      
+      const message = `Hare Krishna! 🙏\n\n` +
+        `Thank you for registering for Janmashtami 2026.\n\n` +
+        `*Registration Details:*\n` +
+        `• *Child Name:* ${selectedRegistration.name}\n` +
+        `• *Parent Name:* ${selectedRegistration.parentName}\n` +
+        `• *Registration ID:* ${selectedRegistration.registrationId}\n` +
+        `• *Competitions:*\n${compList}\n\n` +
+        `Waiting to see your child give a divine performance! 🌸✨`;
       
       const formattedPhone = selectedRegistration.parentPhone.startsWith('+') 
         ? selectedRegistration.parentPhone 
@@ -288,7 +198,7 @@ export default function AdminRegistrations() {
 
       toast({
         title: 'Registration Approved',
-        description: 'Receipt downloaded! Please paste it into the WhatsApp window.',
+        description: 'Opening WhatsApp to send confirmation message.',
       });
 
       setApproveDialogOpen(false);
@@ -554,11 +464,18 @@ export default function AdminRegistrations() {
                               size="sm"
                               className="rounded-[3rem] bg-[#25D366] hover:bg-[#20ba5a] text-white"
                               onClick={() => {
-                                // 1. Download PDF receipt
-                                downloadPDFReceipt(reg);
-
-                                // 2. Open WhatsApp Web with a simple message
-                                const message = `*Sri Krishna Janmashtami Registration Approved*\n\nHare Krishna! The registration for *${reg.name}* (ID: ${reg.registrationId}) has been confirmed. \n\nAttached is the official PDF receipt for your reference. 🙏`;
+                                const compList = reg.competitions
+                                  .map(cid => `• ${data.competitions.find(c => c.id === cid)?.name || cid}`)
+                                  .join('\n');
+                                
+                                const message = `Hare Krishna! 🙏\n\n` +
+                                  `Thank you for registering for Janmashtami 2026.\n\n` +
+                                  `*Registration Details:*\n` +
+                                  `• *Child Name:* ${reg.name}\n` +
+                                  `• *Parent Name:* ${reg.parentName}\n` +
+                                  `• *Registration ID:* ${reg.registrationId}\n` +
+                                  `• *Competitions:*\n${compList}\n\n` +
+                                  `Waiting to see your child give a divine performance! 🌸✨`;
                                 
                                 const formattedPhone = reg.parentPhone.startsWith('+') 
                                   ? reg.parentPhone 
@@ -569,8 +486,8 @@ export default function AdminRegistrations() {
                                 window.open(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`, '_blank');
 
                                 toast({
-                                  title: 'Receipt Downloaded',
-                                  description: 'PDF generated! Please paste/attach it in the WhatsApp chat.',
+                                  title: 'WhatsApp Message Opened',
+                                  description: 'Opening WhatsApp to send confirmation message.',
                                 });
                               }}
                             >
