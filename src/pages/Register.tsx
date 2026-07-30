@@ -142,7 +142,7 @@ export default function Register() {
         toastMessage = 'Payment verification pending. Our team will review your screenshot shortly.';
       }
 
-      addRegistration({
+      await addRegistration({
         registrationId,
         name: formData.name,
         dateOfBirth: formData.dateOfBirth,

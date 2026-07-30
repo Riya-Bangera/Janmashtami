@@ -351,12 +351,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString()
     };
     const created = await api.createRegistration(newRegistration);
-    if (created) {
-      setData(prev => ({
-        ...prev,
-        registrations: [...prev.registrations, created]
-      }));
-    }
+    // Always update local state — use DB result if available, otherwise use local object
+    const toAdd = created || { ...newRegistration, id: `reg-${Date.now()}` };
+    setData(prev => ({
+      ...prev,
+      registrations: [...prev.registrations, toAdd]
+    }));
   };
 
   const updateRegistration = async (id: string, updates: Partial<Registration>) => {
