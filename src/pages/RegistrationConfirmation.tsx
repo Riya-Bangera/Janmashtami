@@ -367,19 +367,47 @@ export default function RegistrationConfirmation() {
           </CardContent>
         </Card>
 
-        <div className="flex gap-4 mt-8">
+        <div className="flex flex-col sm:flex-row gap-4 mt-8">
           {isConfirmed && (
             <Button onClick={handleDownloadPDF} className="flex-1 rounded-[3rem]" size="lg">
               <i className="fas fa-download mr-2" />
-              Download PDF Receipt
+              Download PDF
             </Button>
           )}
           {isPending && (
             <Button disabled className="flex-1 rounded-[3rem]" size="lg">
               <i className="fas fa-clock mr-2" />
-              Receipt Available After Approval
+              Receipt Pending Approval
             </Button>
           )}
+          
+          <Button 
+            onClick={() => {
+              const compList = competitions.map(c => `• ${c.name}`).join('\n');
+              const message = `*Sri Krishna Janmashtami Registration Receipt*\n\n` +
+                `*Participant:* ${registration.name}\n` +
+                `*Registration ID:* ${registration.registrationId}\n` +
+                `*Age Group:* ${registration.ageGroup}\n` +
+                `*Fee Paid:* ₹${registration.totalFee}\n\n` +
+                `*Registered Competitions:*\n${compList}\n\n` +
+                `*Receipt Link:* ${window.location.origin}/#/registration-confirmation/${registration.registrationId}\n\n` +
+                `Hare Krishna! 🙏`;
+              
+              const formattedPhone = registration.parentPhone.startsWith('+') 
+                ? registration.parentPhone 
+                : registration.parentPhone.length === 10 
+                  ? `91${registration.parentPhone}` 
+                  : registration.parentPhone;
+
+              window.open(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`, '_blank');
+            }} 
+            className="flex-1 rounded-[3rem] bg-[#25D366] hover:bg-[#20ba5a] text-white" 
+            size="lg"
+          >
+            <i className="fab fa-whatsapp mr-2 text-xl" />
+            Send via WhatsApp
+          </Button>
+
           <Button onClick={() => navigate('/')} variant="outline" className="flex-1 rounded-[3rem]" size="lg">
             Back to Home
           </Button>
