@@ -3,6 +3,44 @@ import type { AppData, User, Competition, Registration, Score, Result, Settings 
 import { UserRole, AgeGroup, PaymentMethod, RegistrationStatus } from '@/types/types';
 import * as api from '@/db/api';
 
+// ── Google Sheets simultaneous sync ──────────────────────────────────────────
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxdi0DlKVJEDFPxGcb3yIp1T3eFY1ZWatmBiRtMKRYiV9wkpzCh6ON9RZ-5RSHueDKf/exec';
+
+function syncToSheets(table: string, type: 'INSERT' | 'UPDATE' | 'DELETE', record: object) {
+  // Fire-and-forget — never blocks the app
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' }, // Apps Script requires text/plain for no-cors
+    body: JSON.stringify({ table, type, record })
+  }).catch(() => { /* silently ignore — sheets sync is best-effort backup */ });
+}
+
+// Converters: camelCase app types → snake_case for Apps Script (matches Supabase column names)
+function regToRow(r: any) {
+  return {
+    id: r.id, registration_id: r.registrationId, name: r.name,
+    date_of_birth: r.dateOfBirth, age: r.age, age_group: r.ageGroup,
+    competitions: r.competitions, total_fee: r.totalFee,
+    payment_method: r.paymentMethod, status: r.status,
+    parent_name: r.parentName, parent_phone: r.parentPhone,
+    called_to_stage: r.calledToStage, verification_result: r.verificationResult,
+    created_at: r.createdAt
+  };
+}
+function compToRow(c: any) {
+  return {
+    id: c.id, name: c.name, age_groups: c.ageGroups,
+    time: c.time, date: c.date, rubrics: c.rubrics, created_at: c.createdAt
+  };
+}
+function scoreToRow(s: any) {
+  return {
+    id: s.id, registration_id: s.registrationId, competition_id: s.competitionId,
+    judge_id: s.judgeId, scores: s.scores, total_score: s.totalScore, created_at: s.createdAt
+  };
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const defaultSettings: Settings = {
   upiId: '9876543210@upi',
   registrationOpen: true
@@ -316,12 +354,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       id: `comp-${Date.now()}`
     };
     const created = await api.createCompetition(newCompetition);
-    // Always update local state — use DB result if available, otherwise use local object
     const toAdd = created || newCompetition;
-    setData(prev => ({
-      ...prev,
-      competitions: [...prev.competitions, toAdd]
-    }));
+    setData(prev => ({ ...prev, competitions: [...prev.competitions, toAdd] }));
+    syncToSheets('competitions', 'INSERT', compToRow(toAdd));
     return !!created;
   };
 
@@ -332,16 +367,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...prev,
         competitions: prev.competitions.map(c => c.id === id ? { ...c, ...updates } : c)
       }));
+      syncToSheets('competitions', 'UPDATE', compToRow({ id, ...updates }));
     }
   };
 
   const deleteCompetition = async (id: string) => {
     const success = await api.deleteCompetition(id);
     if (success) {
-      setData(prev => ({
-        ...prev,
-        competitions: prev.competitions.filter(c => c.id !== id)
-      }));
+      setData(prev => ({ ...prev, competitions: prev.competitions.filter(c => c.id !== id) }));
+      syncToSheets('competitions', 'DELETE', { id });
     }
   };
 
@@ -351,12 +385,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString()
     };
     const created = await api.createRegistration(newRegistration);
-    // Always update local state — use DB result if available, otherwise use local object
     const toAdd = created || { ...newRegistration, id: `reg-${Date.now()}` };
-    setData(prev => ({
-      ...prev,
-      registrations: [...prev.registrations, toAdd]
-    }));
+    setData(prev => ({ ...prev, registrations: [...prev.registrations, toAdd] }));
+    syncToSheets('registrations', 'INSERT', regToRow(toAdd));
   };
 
   const updateRegistration = async (id: string, updates: Partial<Registration>) => {
@@ -366,16 +397,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...prev,
         registrations: prev.registrations.map(r => r.id === id ? { ...r, ...updates } : r)
       }));
+      syncToSheets('registrations', 'UPDATE', regToRow({ id, ...updates }));
     }
   };
 
   const deleteRegistration = async (id: string) => {
     const success = await api.deleteRegistration(id);
     if (success) {
-      setData(prev => ({
-        ...prev,
-        registrations: prev.registrations.filter(r => r.id !== id)
-      }));
+      setData(prev => ({ ...prev, registrations: prev.registrations.filter(r => r.id !== id) }));
+      syncToSheets('registrations', 'DELETE', { id });
     }
   };
 
@@ -386,10 +416,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     const created = await api.createScore(newScore);
     if (created) {
-      setData(prev => ({
-        ...prev,
-        scores: [...prev.scores, created]
-      }));
+      setData(prev => ({ ...prev, scores: [...prev.scores, created] }));
+      syncToSheets('scores', 'INSERT', scoreToRow(created));
     }
   };
 
@@ -400,6 +428,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...prev,
         scores: prev.scores.map(s => s.id === id ? { ...s, ...updates } : s)
       }));
+      syncToSheets('scores', 'UPDATE', scoreToRow({ id, ...updates }));
     }
   };
 
