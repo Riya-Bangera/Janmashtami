@@ -167,21 +167,35 @@ export default function AdminRegistrations() {
         status: RegistrationStatus.Confirmed
       });
 
-      // Send receipt to parent's phone
-      const receiptResult = await sendReceipt(selectedRegistration, data.competitions);
+      // Send standard email/sms receipt
+      await sendReceipt(selectedRegistration, data.competitions);
 
-      if (receiptResult.success) {
-        toast({
-          title: 'Registration Approved',
-          description: `Registration approved and receipt sent to ${selectedRegistration.parentPhone}`,
-        });
-      } else {
-        toast({
-          title: 'Registration Approved',
-          description: 'Registration approved but receipt sending failed. Please contact parent manually.',
-          variant: 'default'
-        });
-      }
+      // Construct and trigger the WhatsApp Web redirect
+      const compList = selectedRegistration.competitions
+        .map(cid => `• ${data.competitions.find(c => c.id === cid)?.name || cid}`)
+        .join('\n');
+      const message = `*Sri Krishna Janmashtami Registration Receipt*\n\n` +
+        `*Participant:* ${selectedRegistration.name}\n` +
+        `*Registration ID:* ${selectedRegistration.registrationId}\n` +
+        `*Age Group:* ${selectedRegistration.ageGroup}\n` +
+        `*Fee Paid:* ₹${selectedRegistration.totalFee}\n\n` +
+        `*Registered Competitions:*\n${compList}\n\n` +
+        `*Receipt Link:* ${window.location.origin}/#/registration-confirmation/${selectedRegistration.registrationId}\n\n` +
+        `Hare Krishna! 🙏`;
+      
+      const formattedPhone = selectedRegistration.parentPhone.startsWith('+') 
+        ? selectedRegistration.parentPhone 
+        : selectedRegistration.parentPhone.length === 10 
+          ? `91${selectedRegistration.parentPhone}` 
+          : selectedRegistration.parentPhone;
+
+      // Open WhatsApp Web in a new tab
+      window.open(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`, '_blank');
+
+      toast({
+        title: 'Registration Approved',
+        description: `Approved! Opening WhatsApp to send receipt to ${selectedRegistration.parentPhone}`,
+      });
 
       setApproveDialogOpen(false);
       setSelectedRegistration(null);
@@ -441,6 +455,36 @@ export default function AdminRegistrations() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          {reg.status === RegistrationStatus.Confirmed && (
+                            <Button
+                              size="sm"
+                              className="rounded-[3rem] bg-[#25D366] hover:bg-[#20ba5a] text-white"
+                              onClick={() => {
+                                const compList = reg.competitions
+                                  .map(cid => `• ${data.competitions.find(c => c.id === cid)?.name || cid}`)
+                                  .join('\n');
+                                const message = `*Sri Krishna Janmashtami Registration Receipt*\n\n` +
+                                  `*Participant:* ${reg.name}\n` +
+                                  `*Registration ID:* ${reg.registrationId}\n` +
+                                  `*Age Group:* ${reg.ageGroup}\n` +
+                                  `*Fee Paid:* ₹${reg.totalFee}\n\n` +
+                                  `*Registered Competitions:*\n${compList}\n\n` +
+                                  `*Receipt Link:* ${window.location.origin}/#/registration-confirmation/${reg.registrationId}\n\n` +
+                                  `Hare Krishna! 🙏`;
+                                
+                                const formattedPhone = reg.parentPhone.startsWith('+') 
+                                  ? reg.parentPhone 
+                                  : reg.parentPhone.length === 10 
+                                    ? `91${reg.parentPhone}` 
+                                    : reg.parentPhone;
+
+                                window.open(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`, '_blank');
+                              }}
+                            >
+                              <i className="fab fa-whatsapp mr-1 text-base" />
+                              WhatsApp
+                            </Button>
+                          )}
                           {reg.paymentMethod === PaymentMethod.Online && (
                             <Button
                               size="sm"
