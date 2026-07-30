@@ -7,14 +7,16 @@ import * as api from '@/db/api';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxdi0DlKVJEDFPxGcb3yIp1T3eFY1ZWatmBiRtMKRYiV9wkpzCh6ON9RZ-5RSHueDKf/exec';
 
 function syncToSheets(table: string, type: 'INSERT' | 'UPDATE' | 'DELETE', record: object) {
-  // Fire-and-forget — never blocks the app
-  // mode: 'no-cors' is required for Google Apps Script Web App calls from browser
+  // Google Apps Script redirects /exec requests — raw JSON body gets dropped in redirect.
+  // URLSearchParams (form-encoded) survives the redirect correctly.
+  const formData = new URLSearchParams({
+    payload: JSON.stringify({ table, type, record })
+  });
   fetch(SHEETS_URL, {
     method: 'POST',
     mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ table, type, record })
-  }).catch(() => { /* silently ignore — sheets sync is best-effort backup */ });
+    body: formData
+  }).catch(() => { /* best-effort backup — silently ignore */ });
 }
 
 // Converters: camelCase app types → snake_case for Apps Script (matches Supabase column names)
