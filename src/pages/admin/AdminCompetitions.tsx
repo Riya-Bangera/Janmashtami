@@ -66,7 +66,7 @@ export default function AdminCompetitions() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name || formData.ageGroups.length === 0 || formData.rubrics.some(r => !r.name)) {
@@ -78,7 +78,7 @@ export default function AdminCompetitions() {
       return;
     }
 
-    addCompetition({
+    await addCompetition({
       name: formData.name,
       time: formData.time,
       date: formData.date,

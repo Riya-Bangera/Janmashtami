@@ -162,7 +162,7 @@ interface AppContextType {
   addUser: (user: Omit<User, 'id'>) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
   deleteUser: (id: string) => void;
-  addCompetition: (competition: Omit<Competition, 'id'>) => void;
+  addCompetition: (competition: Omit<Competition, 'id'>) => Promise<boolean>;
   updateCompetition: (id: string, updates: Partial<Competition>) => void;
   deleteCompetition: (id: string) => void;
   addRegistration: (registration: Omit<Registration, 'id' | 'createdAt'>) => void;
@@ -310,18 +310,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addCompetition = async (competition: Omit<Competition, 'id'>) => {
+  const addCompetition = async (competition: Omit<Competition, 'id'>): Promise<boolean> => {
     const newCompetition: Competition = {
       ...competition,
       id: `comp-${Date.now()}`
     };
     const created = await api.createCompetition(newCompetition);
-    if (created) {
-      setData(prev => ({
-        ...prev,
-        competitions: [...prev.competitions, created]
-      }));
-    }
+    // Always update local state — use DB result if available, otherwise use local object
+    const toAdd = created || newCompetition;
+    setData(prev => ({
+      ...prev,
+      competitions: [...prev.competitions, toAdd]
+    }));
+    return !!created;
   };
 
   const updateCompetition = async (id: string, updates: Partial<Competition>) => {
