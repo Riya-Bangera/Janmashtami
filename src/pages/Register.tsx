@@ -198,22 +198,10 @@ export default function Register() {
           </CardHeader>
           <CardContent className="text-center space-y-6">
             <Alert className="bg-primary/10 border-primary/20">
-              <AlertDescription className="text-lg">
-                <strong>Online registrations are closed now.</strong>
-                <br />
-                Please do offline registrations.
+              <AlertDescription className="text-lg font-semibold">
+                Registrations are closed at 9 AM
               </AlertDescription>
             </Alert>
-            
-            <div className="bg-accent/50 p-6 rounded-[2rem]">
-              <p className="text-muted-foreground mb-2">
-                <i className="fas fa-info-circle mr-2" />
-                For offline registration assistance:
-              </p>
-              <p className="font-semibold">
-                Please visit our registration desk or contact the event organizers.
-              </p>
-            </div>
 
             <Button onClick={() => navigate('/')} className="rounded-[3rem]" size="lg">
               <i className="fas fa-home mr-2" />

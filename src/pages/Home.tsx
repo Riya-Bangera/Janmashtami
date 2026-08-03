@@ -17,6 +17,22 @@ export default function Home() {
     return new Date().getFullYear();
   };
 
+  const formatEventDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return '';
+    }
+  };
+
   const eventYear = getEventYear();
 
   return (
@@ -27,7 +43,16 @@ export default function Home() {
             <i className="fas fa-spa text-6xl text-primary" />
           </div>
           <h1 className="text-5xl font-bold mb-4">Sri Krishna Janmashtami</h1>
-          <h2 className="text-3xl font-semibold text-muted-foreground mb-6">Competitions {eventYear}</h2>
+          <h2 className="text-3xl font-semibold text-muted-foreground mb-4">Competitions {eventYear}</h2>
+          {(() => {
+            const eventDate = data.settings.eventDate || '2026-09-10';
+            return (
+              <div className="flex items-center justify-center gap-2 text-lg font-semibold mb-6">
+                <i className="fas fa-calendar-alt" />
+                <span>Event Date: {formatEventDate(eventDate)}</span>
+              </div>
+            );
+          })()}
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Celebrate the divine birth of Lord Krishna through devotional competitions. 
             Join us in showcasing your talents and devotion.

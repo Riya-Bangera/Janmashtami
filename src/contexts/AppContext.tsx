@@ -47,7 +47,9 @@ function scoreToRow(s: any) {
 
 const defaultSettings: Settings = {
   upiId: '9876543210@upi',
-  registrationOpen: true
+  registrationOpen: true,
+  eventYear: 2026,
+  eventDate: '2026-09-10'
 };
 
 const defaultCompetitions: Competition[] = [
