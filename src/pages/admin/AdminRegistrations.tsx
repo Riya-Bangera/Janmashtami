@@ -21,7 +21,7 @@ import { formatDate } from '@/lib/utils';
 
 export default function AdminRegistrations() {
   const navigate = useNavigate();
-  const { currentUser, data, addRegistration, updateRegistration } = useApp();
+  const { currentUser, data, addRegistration, updateRegistration, deleteRegistration } = useApp();
   const { toast } = useToast();
   const [filterAgeGroup, setFilterAgeGroup] = useState<string>('all');
   const [filterCompetition, setFilterCompetition] = useState<string>('all');
@@ -528,6 +528,23 @@ export default function AdminRegistrations() {
                               </Button>
                             </>
                           )}
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to delete registration for ${reg.name}?`)) {
+                                deleteRegistration(reg.id);
+                                toast({
+                                  title: 'Deleted',
+                                  description: 'Registration deleted successfully'
+                                });
+                              }
+                            }}
+                            className="rounded-[3rem]"
+                          >
+                            <i className="fas fa-trash mr-1" />
+                            Delete
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
