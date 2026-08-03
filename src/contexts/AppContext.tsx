@@ -7,16 +7,7 @@ import * as api from '@/db/api';
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxdi0DlKVJEDFPxGcb3yIp1T3eFY1ZWatmBiRtMKRYiV9wkpzCh6ON9RZ-5RSHueDKf/exec';
 
 function syncToSheets(table: string, type: 'INSERT' | 'UPDATE' | 'DELETE', record: object) {
-  // Google Apps Script redirects /exec requests — raw JSON body gets dropped in redirect.
-  // URLSearchParams (form-encoded) survives the redirect correctly.
-  const formData = new URLSearchParams({
-    payload: JSON.stringify({ table, type, record })
-  });
-  fetch(SHEETS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: formData
-  }).catch(() => { /* best-effort backup — silently ignore */ });
+  // Deprecated: now using automatic full-database sync useEffect
 }
 
 // Converters: camelCase app types → snake_case for Apps Script (matches Supabase column names)
@@ -296,6 +287,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     loadData();
   }, []);
+
+  // Automatically sync all data to Google Sheets on database changes
+  useEffect(() => {
+    if (!isInitialized || isLoading) return;
+
+    // Sanitize registrations to avoid sending heavy base64 strings
+    const sanitizedRegistrations = (data.registrations || []).map(r => {
+      const { paymentScreenshot, ...rest } = r;
+      return {
+        ...rest,
+        paymentScreenshot: paymentScreenshot ? 'In Supabase' : 'N/A'
+      };
+    });
+
+    const payload = {
+      users: data.users,
+      competitions: data.competitions,
+      registrations: sanitizedRegistrations
+    };
+
+    const formData = new URLSearchParams({
+      payload: JSON.stringify(payload)
+    });
+
+    fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: formData
+    }).catch(err => console.error('Failed to sync to Google Sheets:', err));
+  }, [data, isInitialized, isLoading]);
 
   const login = async (username: string, password: string): Promise<User | null> => {
     const dbUser = await api.authenticateUser(username, password);
