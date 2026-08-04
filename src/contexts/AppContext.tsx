@@ -217,6 +217,7 @@ interface AppContextType {
   getScoresByCompetition: (competitionId: string) => Score[];
   addResult: (result: Omit<Result, 'id'>) => void;
   updateResult: (id: string, updates: Partial<Result>) => void;
+  deleteResult: (id: string) => Promise<boolean>;
   getResultByCompetition: (competitionId: string) => Result | undefined;
   updateSettings: (updates: Partial<Settings>) => void;
   resetData: () => void;
@@ -478,6 +479,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteResult = async (id: string): Promise<boolean> => {
+    const success = await api.deleteResult(id);
+    if (success) {
+      setData(prev => ({
+        ...prev,
+        results: prev.results.filter(r => r.id !== id)
+      }));
+    }
+    return success;
+  };
+
   const getResultByCompetition = (competitionId: string): Result | undefined => {
     return data.results.find(r => r.competitionId === competitionId);
   };
@@ -552,6 +564,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getScoresByCompetition,
         addResult,
         updateResult,
+        deleteResult,
         getResultByCompetition,
         updateSettings,
         resetData

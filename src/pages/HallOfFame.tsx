@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useApp } from '@/contexts/AppContext';
-import { AgeGroup } from '@/types/types';
+import { AgeGroup, UserRole } from '@/types/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function HallOfFame() {
   const navigate = useNavigate();
-  const { data } = useApp();
+  const { data, currentUser, deleteResult } = useApp();
+  const { toast } = useToast();
 
   // Get event year
   const getEventYear = () => {
@@ -48,6 +50,24 @@ export default function HallOfFame() {
   const getCompetitionName = (competitionId: string) => {
     const competition = data.competitions.find(c => c.id === competitionId);
     return competition?.name || 'Unknown Competition';
+  };
+
+  const handleDeleteResult = async (resultId: string) => {
+    if (confirm('Are you sure you want to delete this result from the Hall of Fame?')) {
+      const success = await deleteResult(resultId);
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'Result deleted from Hall of Fame successfully'
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete result',
+          variant: 'destructive'
+        });
+      }
+    }
   };
 
   const ageGroupLabels = {
@@ -100,10 +120,24 @@ export default function HallOfFame() {
                               <i className="fas fa-star text-primary" />
                               {getCompetitionName(result.competitionId)}
                             </CardTitle>
-                            <Badge className="bg-green-600 text-white">
-                              <i className="fas fa-check-circle mr-1" />
-                              Published
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-green-600 text-white">
+                                <i className="fas fa-check-circle mr-1" />
+                                Published
+                              </Badge>
+                              {currentUser?.role === UserRole.Admin && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="rounded-[3rem]"
+                                  onClick={() => handleDeleteResult(result.id)}
+                                  title="Delete from Hall of Fame"
+                                >
+                                  <i className="fas fa-trash mr-1" />
+                                  Delete
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-6">

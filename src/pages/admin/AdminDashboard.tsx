@@ -223,6 +223,20 @@ export default function AdminDashboard() {
               </p>
             </CardContent>
           </Card>
+
+          <Card className="rounded-[3rem] border-2 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/hall-of-fame')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <i className="fas fa-award text-primary text-2xl" />
+                Hall of Fame Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                View published results and delete records from the Hall of Fame
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
