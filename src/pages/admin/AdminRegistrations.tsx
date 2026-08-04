@@ -68,29 +68,29 @@ export default function AdminRegistrations() {
         if (found) {
           const ageGroupStr = found.ageGroups.length > 0 ? getAgeGroupLabel(found.ageGroups[0]) : '';
           const categoryPrefix = ageGroupStr ? `${ageGroupStr}: ` : '';
-          return `${getCompEmoji(found.name)} ${categoryPrefix}${found.name} — *${found.time || ''}*`;
+          return `${getCompEmoji(found.name)} ${categoryPrefix}${found.name} — **${found.time || ''}**`;
         }
         return `• ${cid}`;
       })
       .join('\n');
 
     return `Hare Krishna! 🙏🌸\n\n` +
-      `Thank you for registering for the *Sri Krishna Janmashtami Competitions 2026*.\n\n` +
-      `👧 *Participant:* ${reg.name}\n` +
-      `🆔 *Registration ID:* ${reg.registrationId}\n\n` +
-      `*Competitions:*\n${compList}\n\n` +
-      `📅 *Date:* ${getFormattedEventDate(data.settings.eventDate)}\n` +
-      `📍 *Venue:* Samskruti Pavilion, Sarjapur Road\n` +
-      `🗺️ Google Maps Location: https://share.google/IrUQD1ue351qUR965\n\n` +
-      `*Participant Reminders:*\n` +
-      `🎨 *Colouring / Birthday Card Making:* Bring your own colours and decorative materials. Sheets/cards will be provided.\n` +
-      `💃 *Solo Dance:* Share the audio track with the volunteer in advance.\n` +
-      `👗 *Fancy Dress:* Come dressed from home according to the theme “Krishna Leela.”\n` +
-      `📜 *Shloka Recitation:* Prepare and practise the selected shlokas in advance.\n` +
-      `🎤 *Solo Song:* Prepare a Krishna devotional song and share the karaoke/audio track beforehand, if required.\n\n` +
+      `Thank you for registering for the **Sri Krishna Janmashtami Competitions 2026**.\n\n` +
+      `👧 **Participant:** ${reg.name}\n` +
+      `🆔 **Registration ID:** ${reg.registrationId}\n\n` +
+      `**Competitions:**\n${compList}\n\n` +
+      `📅 **Date:** ${getFormattedEventDate(data.settings.eventDate)}\n` +
+      `📍 **Venue:** Samskruti Pavilion, Sarjapur Road\n` +
+      `🗺️ [Google Maps Location](https://share.google/IrUQD1ue351qUR965)\n\n` +
+      `**Participant Reminders:**\n` +
+      `🎨 **Colouring / Birthday Card Making:** Bring your own colours and decorative materials. Sheets/cards will be provided.\n` +
+      `💃 **Solo Dance:** Share the audio track with the volunteer in advance.\n` +
+      `👗 **Fancy Dress:** Come dressed from home according to the theme **“Krishna Leela.”**\n` +
+      `📜 **Shloka Recitation:** Prepare and practise the selected shlokas in advance.\n` +
+      `🎤 **Solo Song:** Prepare a Krishna devotional song and share the karaoke/audio track beforehand, if required.\n\n` +
       `Stay back after the competitions to enjoy cultural programmes, Krishna Katha, devotional celebrations, free Darshan, Prasadam, and fun activities for children! 🌼\n\n` +
       `We look forward to seeing ${reg.name}’s divine performance! 🌸✨\n\n` +
-      `*ISKCON Whitefield Bhakti Centre – Sarjapur*`;
+      `**ISKCON Whitefield Bhakti Centre – Sarjapur**`;
   };
   const [filterAgeGroup, setFilterAgeGroup] = useState<string>('all');
   const [filterCompetition, setFilterCompetition] = useState<string>('all');
