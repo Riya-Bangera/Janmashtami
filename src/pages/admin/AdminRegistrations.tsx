@@ -92,6 +92,24 @@ export default function AdminRegistrations() {
       `We look forward to seeing ${reg.name}’s divine performance! 🌸✨\n\n` +
       `**ISKCON Whitefield Bhakti Centre – Sarjapur**`;
   };
+
+  const [whatsappSent, setWhatsappSent] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('whatsapp_sent_registrations');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const markWhatsAppAsSent = (regId: string) => {
+    setWhatsappSent(prev => {
+      const updated = { ...prev, [regId]: true };
+      localStorage.setItem('whatsapp_sent_registrations', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const [filterAgeGroup, setFilterAgeGroup] = useState<string>('all');
   const [filterCompetition, setFilterCompetition] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -253,6 +271,8 @@ export default function AdminRegistrations() {
           : selectedRegistration.parentPhone;
 
       window.open(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`, '_blank');
+
+      markWhatsAppAsSent(selectedRegistration.registrationId);
 
       toast({
         title: 'Registration Approved',
@@ -520,7 +540,11 @@ export default function AdminRegistrations() {
                           {reg.status === RegistrationStatus.Confirmed && (
                             <Button
                               size="sm"
-                              className="rounded-[3rem] bg-[#25D366] hover:bg-[#20ba5a] text-white"
+                              className={`rounded-[3rem] text-white ${
+                                whatsappSent[reg.registrationId]
+                                  ? 'bg-blue-600 hover:bg-blue-700'
+                                  : 'bg-[#25D366] hover:bg-[#20ba5a]'
+                              }`}
                               onClick={() => {
                                 const message = generateWhatsAppMessage(reg);
                                 
@@ -532,14 +556,25 @@ export default function AdminRegistrations() {
 
                                 window.open(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`, '_blank');
 
+                                markWhatsAppAsSent(reg.registrationId);
+
                                 toast({
                                   title: 'WhatsApp Message Opened',
                                   description: 'Opening WhatsApp to send confirmation message.',
                                 });
                               }}
                             >
-                              <i className="fab fa-whatsapp mr-1 text-base" />
-                              WhatsApp
+                              {whatsappSent[reg.registrationId] ? (
+                                <>
+                                  <i className="fas fa-check-circle mr-1 text-base" />
+                                  Sent
+                                </>
+                              ) : (
+                                <>
+                                  <i className="fab fa-whatsapp mr-1 text-base" />
+                                  WhatsApp
+                                </>
+                              )}
                             </Button>
                           )}
                           {reg.paymentMethod === PaymentMethod.Online && (
