@@ -23,6 +23,75 @@ export default function AdminRegistrations() {
   const navigate = useNavigate();
   const { currentUser, data, addRegistration, updateRegistration, deleteRegistration } = useApp();
   const { toast } = useToast();
+
+  const getFormattedEventDate = (dateStr?: string) => {
+    if (!dateStr) return '4th September 2026';
+    try {
+      const date = new Date(dateStr);
+      const day = date.getDate();
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      
+      let suffix = 'th';
+      if (day === 1 || day === 21 || day === 31) suffix = 'st';
+      else if (day === 2 || day === 22) suffix = 'nd';
+      else if (day === 3 || day === 23) suffix = 'rd';
+      
+      return `${day}${suffix} ${month} ${year}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  const getCompEmoji = (name: string) => {
+    const lowercase = name.toLowerCase();
+    if (lowercase.includes('colouring') || lowercase.includes('painting') || lowercase.includes('card')) return '🎨';
+    if (lowercase.includes('shloka') || lowercase.includes('recitation')) return '📜';
+    if (lowercase.includes('fancy') || lowercase.includes('dress')) return '👗';
+    if (lowercase.includes('dance')) return '💃';
+    if (lowercase.includes('song') || lowercase.includes('music') || lowercase.includes('singing')) return '🎤';
+    return '🏆';
+  };
+
+  const getAgeGroupLabel = (group: string) => {
+    if (group.toLowerCase() === 'kids') return 'Kids';
+    if (group.toLowerCase() === 'juniors') return 'Juniors';
+    if (group.toLowerCase() === 'teens') return 'Teens';
+    return group;
+  };
+
+  const generateWhatsAppMessage = (reg: Registration) => {
+    const compList = reg.competitions
+      .map(cid => {
+        const found = data.competitions.find(c => c.id === cid);
+        if (found) {
+          const ageGroupStr = found.ageGroups.length > 0 ? getAgeGroupLabel(found.ageGroups[0]) : '';
+          const categoryPrefix = ageGroupStr ? `${ageGroupStr}: ` : '';
+          return `${getCompEmoji(found.name)} ${categoryPrefix}${found.name} — *${found.time || ''}*`;
+        }
+        return `• ${cid}`;
+      })
+      .join('\n');
+
+    return `Hare Krishna! 🙏🌸\n\n` +
+      `Thank you for registering for the *Sri Krishna Janmashtami Competitions 2026*.\n\n` +
+      `👧 *Participant:* ${reg.name}\n` +
+      `🆔 *Registration ID:* ${reg.registrationId}\n\n` +
+      `*Competitions:*\n${compList}\n\n` +
+      `📅 *Date:* ${getFormattedEventDate(data.settings.eventDate)}\n` +
+      `📍 *Venue:* Samskruti Pavilion, Sarjapur Road\n` +
+      `🗺️ Google Maps Location: https://share.google/IrUQD1ue351qUR965\n\n` +
+      `*Participant Reminders:*\n` +
+      `🎨 *Colouring / Birthday Card Making:* Bring your own colours and decorative materials. Sheets/cards will be provided.\n` +
+      `💃 *Solo Dance:* Share the audio track with the volunteer in advance.\n` +
+      `👗 *Fancy Dress:* Come dressed from home according to the theme “Krishna Leela.”\n` +
+      `📜 *Shloka Recitation:* Prepare and practise the selected shlokas in advance.\n` +
+      `🎤 *Solo Song:* Prepare a Krishna devotional song and share the karaoke/audio track beforehand, if required.\n\n` +
+      `Stay back after the competitions to enjoy cultural programmes, Krishna Katha, devotional celebrations, free Darshan, Prasadam, and fun activities for children! 🌼\n\n` +
+      `We look forward to seeing ${reg.name}’s divine performance! 🌸✨\n\n` +
+      `*ISKCON Whitefield Bhakti Centre – Sarjapur*`;
+  };
   const [filterAgeGroup, setFilterAgeGroup] = useState<string>('all');
   const [filterCompetition, setFilterCompetition] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -175,18 +244,7 @@ export default function AdminRegistrations() {
       await sendReceipt(selectedRegistration, data.competitions);
 
       // Open WhatsApp Web with the custom message
-      const compList = selectedRegistration.competitions
-        .map(cid => `• ${data.competitions.find(c => c.id === cid)?.name || cid}`)
-        .join('\n');
-      
-      const message = `Hare Krishna! 🙏\n\n` +
-        `Thank you for registering for Janmashtami 2026.\n\n` +
-        `*Registration Details:*\n` +
-        `• *Child Name:* ${selectedRegistration.name}\n` +
-        `• *Parent Name:* ${selectedRegistration.parentName}\n` +
-        `• *Registration ID:* ${selectedRegistration.registrationId}\n` +
-        `• *Competitions:*\n${compList}\n\n` +
-        `Waiting to see your child give a divine performance! 🌸✨`;
+      const message = generateWhatsAppMessage(selectedRegistration);
       
       const formattedPhone = selectedRegistration.parentPhone.startsWith('+') 
         ? selectedRegistration.parentPhone 
@@ -464,18 +522,7 @@ export default function AdminRegistrations() {
                               size="sm"
                               className="rounded-[3rem] bg-[#25D366] hover:bg-[#20ba5a] text-white"
                               onClick={() => {
-                                const compList = reg.competitions
-                                  .map(cid => `• ${data.competitions.find(c => c.id === cid)?.name || cid}`)
-                                  .join('\n');
-                                
-                                const message = `Hare Krishna! 🙏\n\n` +
-                                  `Thank you for registering for Janmashtami 2026.\n\n` +
-                                  `*Registration Details:*\n` +
-                                  `• *Child Name:* ${reg.name}\n` +
-                                  `• *Parent Name:* ${reg.parentName}\n` +
-                                  `• *Registration ID:* ${reg.registrationId}\n` +
-                                  `• *Competitions:*\n${compList}\n\n` +
-                                  `Waiting to see your child give a divine performance! 🌸✨`;
+                                const message = generateWhatsAppMessage(reg);
                                 
                                 const formattedPhone = reg.parentPhone.startsWith('+') 
                                   ? reg.parentPhone 
